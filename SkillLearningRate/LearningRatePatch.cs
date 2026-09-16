@@ -30,13 +30,23 @@ namespace SkillLearningRate
             }
 
             var multiplier = settings.GlobalLearningRateMultiplier;
-            if (multiplier <= 0f || Math.Abs(multiplier - 1f) < 0.0001f)
+            if (multiplier < 0f || Math.Abs(multiplier - 1f) < 0.0001f)
             {
                 return;
             }
 
-            // AddFactor takes the delta from 1.0, so 2.0x is passed as +1.0.
-            __result.AddFactor(multiplier - 1f, includeDescriptions ? MultiplierText : null);
+            // An ExplainedNumber resolves as BaseNumber * (1 + SumOfFactors), and AddFactor
+            // adds into that one shared SumOfFactors -- it does not scale the result. The
+            // vanilla learning rate already accumulates large factors (0.4 per attribute
+            // point, 1.0 per focus point), so passing a bare `multiplier - 1` here gets
+            // diluted to almost nothing: with attributes 6 / focus 3 the factors sum to
+            // 5.4, and a 0.01x request would land at 0.85x of the original rate.
+            //
+            // To genuinely multiply the result, scale our contribution by the factors that
+            // are already there:  Base * (1 + F + d) == m * Base * (1 + F)  =>  d = (m - 1) * (1 + F)
+            var delta = (multiplier - 1f) * (1f + __result.SumOfFactors);
+
+            __result.AddFactor(delta, includeDescriptions ? MultiplierText : null);
         }
     }
 }
