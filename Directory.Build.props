@@ -13,5 +13,6 @@
     <WorkshopFolder Condition="'$(WorkshopFolder)' == ''">$(GameFolder)\..\..\workshop\content\261550</WorkshopFolder>
     <HarmonyModuleDir Condition="'$(HarmonyModuleDir)' == ''">$(WorkshopFolder)\2859188632</HarmonyModuleDir>
     <McmModuleDir Condition="'$(McmModuleDir)' == ''">$(WorkshopFolder)\2859238197</McmModuleDir>
+    <UiExtenderModuleDir Condition="'$(UiExtenderModuleDir)' == ''">$(WorkshopFolder)\2859222409</UiExtenderModuleDir>
   </PropertyGroup>
 </Project>

@@ -50,6 +50,20 @@ From `DefaultSkillLevelingManager`, opportunities are wildly uneven:
 The multipliers in the settings compensate. They are reasoned from the formulas and the source
 counts, not measured from play, and they want testing before anyone trusts them.
 
+## The second row of focus pips
+
+Focus runs to 10, but the character screen only ever drew five. UIExtenderEx adds a second row of
+five above the first, at 0.4 the height so both fit the space one row used to occupy.
+
+`SkillPointsContainerListPanel` lights child *i* whenever `CurrentFocusLevel` reaches *i + 1*, and
+it loops over its own child count rather than a hardcoded five — so a second panel works untouched,
+except that it would light its first pip at focus 1. A view-model mixin on `SkillVM` exposes
+`CurrentFocusLevelUpper`, the value minus five, and the upper row binds to that instead.
+
+Both the small pips on each skill tile and the large ones on the inspected skill are covered. The UI
+registration is wrapped separately from the progression changes, so if a prefab patch ever fails
+against a future game version the curve still works and only the pips revert.
+
 ## Settings
 
 In **Mod Options → Mastery Curve**. Everything is phrased as something you can notice while playing

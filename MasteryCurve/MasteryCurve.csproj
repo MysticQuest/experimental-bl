@@ -25,6 +25,10 @@
       <HintPath>$(HarmonyModuleDir)\bin\Win64_Shipping_Client\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Bannerlord.UIExtenderEx">
+      <HintPath>$(UiExtenderModuleDir)\bin\Win64_Shipping_Client\Bannerlord.UIExtenderEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="MCMv5">
       <HintPath>$(McmModuleDir)\bin\Win64_Shipping_Client\MCMv5.dll</HintPath>
       <Private>false</Private>
