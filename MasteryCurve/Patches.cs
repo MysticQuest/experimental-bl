@@ -30,9 +30,9 @@ namespace MasteryCurve
         [HarmonyPrefix]
         private static void Scale(SkillObject skill, ref float rawXp)
         {
-            if (Settings.Instance == null || !Settings.Instance.PerSkillMultipliers) return;
-            if (skill == null || rawXp <= 0f) return;
-            rawXp *= Settings.Instance.MultiplierFor(skill);
+            var settings = Settings.Instance;
+            if (settings == null || skill == null || rawXp <= 0f) return;
+            rawXp *= settings.MultiplierFor(skill);
         }
     }
 }

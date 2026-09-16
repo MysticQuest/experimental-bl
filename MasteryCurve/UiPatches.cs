@@ -1,76 +1,52 @@
-using System;
 using System.Xml;
 using Bannerlord.UIExtenderEx.Attributes;
 using Bannerlord.UIExtenderEx.Prefabs;
-using Bannerlord.UIExtenderEx.ViewModels;
-using TaleWorlds.CampaignSystem.ViewModelCollection.CharacterDeveloper;
-using TaleWorlds.Library;
 
 namespace MasteryCurve
 {
     /// <summary>
-    /// Focus runs to 10, but the character screen only draws five pips. This adds a second row.
+    /// Focus runs to 10, but the character screen only ever drew five pips.
     /// </summary>
     /// <remarks>
     /// <c>SkillPointsContainerListPanel</c> lights child <c>i</c> whenever <c>CurrentFocusLevel</c>
-    /// reaches <c>i + 1</c>, and it loops over its own child count rather than a hardcoded five.
-    /// So a second panel works as-is, except that it would light its first pip at focus 1. The
-    /// mixin below exposes the upper half of the value so the second row starts counting at six.
+    /// reaches <c>i + 1</c>, and it loops over its own child count rather than a hardcoded five, so
+    /// ten children work with no widget change at all. The panel itself is replaced rather than
+    /// added to, because it is a horizontal list: anything inserted beside it flows along the row
+    /// instead of stacking, and the pips have to be narrowed to keep the original footprint anyway.
     /// </remarks>
-    [ViewModelMixin("RefreshWithCurrentValues")]
-    internal sealed class SkillFocusRowMixin : BaseViewModelMixin<SkillVM>
+    internal static class FocusPips
     {
-        private const int PipsPerRow = 5;
-        private int _upper;
-
-        public SkillFocusRowMixin(SkillVM vm) : base(vm) => Recalculate();
-
-        [DataSourceProperty]
-        public int CurrentFocusLevelUpper
-        {
-            get => _upper;
-            set
-            {
-                if (_upper == value) return;
-                _upper = value;
-                OnPropertyChangedWithValue(value, nameof(CurrentFocusLevelUpper));
-            }
-        }
-
-        public override void OnRefresh() => Recalculate();
-
-        private void Recalculate() =>
-            CurrentFocusLevelUpper = Math.Max(0, (ViewModel?.CurrentFocusLevel ?? 0) - PipsPerRow);
-    }
-
-    /// <summary>Shared builder for a second pip row bound to the upper half of the focus value.</summary>
-    internal static class FocusRow
-    {
-        internal static XmlDocument Build(int pipWidth, int pipHeight, string brush, int marginRight, int marginBottom)
+        internal static XmlDocument Build(int width, int height, string brush, int marginLeft, int marginRight,
+                                          string? alignment, string? marginBottomValue)
         {
             var document = new XmlDocument();
             var panel = document.CreateElement("SkillPointsContainerListPanel");
-            Set(panel, "WidthSizePolicy", "CoverChildren");
-            Set(panel, "HeightSizePolicy", "CoverChildren");
-            Set(panel, "HorizontalAlignment", "Right");
-            Set(panel, "VerticalAlignment", "Bottom");
-            Set(panel, "MarginRight", marginRight.ToString());
-            Set(panel, "MarginBottom", marginBottom.ToString());
-            Set(panel, "CurrentFocusLevel", "@CurrentFocusLevelUpper");
-            Set(panel, "IsEnabled", "false");
-            Set(panel, "DoNotAcceptEvents", "true");
+            panel.SetAttribute("WidthSizePolicy", "CoverChildren");
+            panel.SetAttribute("HeightSizePolicy", "CoverChildren");
+            panel.SetAttribute("VerticalAlignment", "Center");
+            panel.SetAttribute("CurrentFocusLevel", "@CurrentFocusLevel");
+            panel.SetAttribute("IsEnabled", "false");
+            panel.SetAttribute("DoNotAcceptEvents", "true");
+            if (alignment != null) panel.SetAttribute("HorizontalAlignment", alignment);
+            if (marginBottomValue != null)
+            {
+                panel.SetAttribute("VerticalAlignment", "Bottom");
+                panel.SetAttribute("MarginBottom", marginBottomValue);
+                panel.SetAttribute("MarginRight", "5");
+            }
 
             var children = document.CreateElement("Children");
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < 10; i++)
             {
                 var pip = document.CreateElement("BrushWidget");
-                Set(pip, "WidthSizePolicy", "Fixed");
-                Set(pip, "HeightSizePolicy", "Fixed");
-                Set(pip, "SuggestedWidth", pipWidth.ToString());
-                Set(pip, "SuggestedHeight", pipHeight.ToString());
-                Set(pip, "Brush", brush);
-                Set(pip, "MarginRight", i == 4 ? "2" : "5");
-                Set(pip, "ForcePixelPerfectRenderPlacement", "true");
+                pip.SetAttribute("WidthSizePolicy", "Fixed");
+                pip.SetAttribute("HeightSizePolicy", "Fixed");
+                pip.SetAttribute("SuggestedWidth", width.ToString());
+                pip.SetAttribute("SuggestedHeight", height.ToString());
+                pip.SetAttribute("Brush", brush);
+                if (marginLeft > 0) pip.SetAttribute("MarginLeft", marginLeft.ToString());
+                pip.SetAttribute("MarginRight", marginRight.ToString());
+                pip.SetAttribute("ForcePixelPerfectRenderPlacement", "true");
                 children.AppendChild(pip);
             }
 
@@ -78,63 +54,27 @@ namespace MasteryCurve
             document.AppendChild(panel);
             return document;
         }
-
-        private static void Set(XmlElement element, string name, string value) => element.SetAttribute(name, value);
     }
 
-    // ---- the small pips on every skill tile ----
-
-    [PrefabExtension("SkillGridItem", "descendant::SkillPointsContainerListPanel/Children/BrushWidget")]
-    internal sealed class SmallPipHeightPatch : PrefabExtensionSetAttributePatch
-    {
-        public override string Id => "MasteryCurve.SmallPipHeight";
-        public override string Attribute => "SuggestedHeight";
-        public override string Value => "12";          // 0.4 of the original 30, so two rows fit the slot
-    }
-
+    /// <summary>Ten small pips on each skill tile, in the width five used to take.</summary>
     [PrefabExtension("SkillGridItem", "descendant::SkillPointsContainerListPanel")]
-    internal sealed class SmallPipRowOffsetPatch : PrefabExtensionSetAttributePatch
+    internal sealed class SmallFocusPipsPatch : PrefabExtensionReplacePatch
     {
-        public override string Id => "MasteryCurve.SmallPipRowOffset";
-        public override string Attribute => "MarginBottom";
-        public override string Value => "8";           // the lower row, pinned so the upper one lands cleanly
+        public override string Id => "MasteryCurve.SmallFocusPips";
+
+        // Five pips took 5 x (11 + 5) = 80px. Ten take 10 x (6 + 2) = the same 80px.
+        public override XmlDocument GetPrefabExtension() =>
+            FocusPips.Build(6, 30, "Skill.Point.Small", 0, 2, "Right", "!SkillPoints.MarginBottom");
     }
 
-    // The Prefabs2 insert patch carries no content member -- it only describes where to insert --
-    // so the original API is still the one that can supply an XmlDocument. Obsolete, not broken.
-#pragma warning disable CS0618
-    [PrefabExtension("SkillGridItem", "descendant::SkillGridItemButtonWidget/Children")]
-    internal sealed class SmallUpperRowPatch : PrefabExtensionInsertPatch
-    {
-        public override string Id => "MasteryCurve.SmallUpperRow";
-        public override int Position => 0;
-        public override XmlDocument GetPrefabExtension() => FocusRow.Build(11, 12, "Skill.Point.Small", 5, 22);
-    }
-
-    // ---- the large pips on the inspected skill ----
-
-    [PrefabExtension("CharacterDeveloper", "descendant::SkillPointsContainerListPanel/Children/BrushWidget")]
-    internal sealed class LargePipHeightPatch : PrefabExtensionSetAttributePatch
-    {
-        public override string Id => "MasteryCurve.LargePipHeight";
-        public override string Attribute => "SuggestedHeight";
-        public override string Value => "26";          // 0.4 of the original 64
-    }
-
+    /// <summary>Ten large pips under the inspected skill.</summary>
     [PrefabExtension("CharacterDeveloper", "descendant::SkillPointsContainerListPanel")]
-    internal sealed class LargePipRowOffsetPatch : PrefabExtensionSetAttributePatch
+    internal sealed class LargeFocusPipsPatch : PrefabExtensionReplacePatch
     {
-        public override string Id => "MasteryCurve.LargePipRowOffset";
-        public override string Attribute => "VerticalAlignment";
-        public override string Value => "Bottom";
-    }
+        public override string Id => "MasteryCurve.LargeFocusPips";
 
-    [PrefabExtension("CharacterDeveloper", "descendant::SkillPointsContainerListPanel/..")]
-    internal sealed class LargeUpperRowPatch : PrefabExtensionInsertPatch
-    {
-        public override string Id => "MasteryCurve.LargeUpperRow";
-        public override int Position => 0;
-        public override XmlDocument GetPrefabExtension() => FocusRow.Build(20, 26, "Skill.Point.Big", 2, 30);
+        // Five pips took 5 x (20 + 2 + 2) = 120px. Ten take 10 x (10 + 1 + 1) = the same 120px.
+        public override XmlDocument GetPrefabExtension() =>
+            FocusPips.Build(10, 64, "Skill.Point.Big", 1, 1, null, null);
     }
-#pragma warning restore CS0618
 }
