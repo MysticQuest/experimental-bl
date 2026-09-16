@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>SkillLearningRate</RootNamespace>
+    <AssemblyName>SkillLearningRate</AssemblyName>
+    <ModuleName>SkillLearningRate</ModuleName>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>x64</Platforms>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bannerlord.ReferenceAssemblies.Core" Version="1.4.8.119303" PrivateAssets="all" />
+    <PackageReference Include="Bannerlord.ReferenceAssemblies.Native" Version="1.4.8.119303" PrivateAssets="all" />
+    <PackageReference Include="Bannerlord.ReferenceAssemblies.SandBox" Version="1.4.8.119303" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CopyModuleToGame" AfterTargets="Build">
+    <PropertyGroup>
+      <ModuleDir>$(GameFolder)\Modules\$(ModuleName)</ModuleDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(ModuleDir)\bin\Win64_Shipping_Client" />
+    <MakeDir Directories="$(ModuleDir)\ModuleData" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\_Module\SubModule.xml" DestinationFolder="$(ModuleDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\_Module\ModuleData\settings.xml" DestinationFolder="$(ModuleDir)\ModuleData" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

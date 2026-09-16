@@ -1,0 +1,6 @@
+<Project>
+  <!-- Copy to Directory.Build.props.user if your Bannerlord install is elsewhere. -->
+  <PropertyGroup>
+    <GameFolder>V:\Games\Steam\steamapps\common\Mount &amp; Blade II Bannerlord</GameFolder>
+  </PropertyGroup>
+</Project>

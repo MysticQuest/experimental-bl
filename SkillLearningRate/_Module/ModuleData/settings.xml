@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SkillLearningRateSettings>
+  <!-- Master switch. Set to false to leave vanilla learning rate untouched. -->
+  <Enabled>true</Enabled>
+  <!-- Multiplier applied to every skill's learning rate. 1.0 is vanilla, 2.0 is double, 0.5 is half. -->
+  <GlobalLearningRateMultiplier>1.0</GlobalLearningRateMultiplier>
+</SkillLearningRateSettings>
