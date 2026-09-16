@@ -1,0 +1,12 @@
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+!**/_Module/**
+Directory.Build.props.user

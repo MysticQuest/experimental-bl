@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GameFolder Condition="'$(GameFolder)' == ''">V:\Games\Steam\steamapps\common\Mount &amp; Blade II Bannerlord</GameFolder>
+    <GameVersion>v1.4.8</GameVersion>
+  </PropertyGroup>
+</Project>
