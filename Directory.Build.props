@@ -7,4 +7,11 @@
     <GameFolder Condition="'$(GameFolder)' == ''">V:\Games\Steam\steamapps\common\Mount &amp; Blade II Bannerlord</GameFolder>
     <GameVersion>v1.4.8</GameVersion>
   </PropertyGroup>
+
+  <!-- Steam Workshop modules the mods build against. IDs are the Workshop item ids. -->
+  <PropertyGroup>
+    <WorkshopFolder Condition="'$(WorkshopFolder)' == ''">$(GameFolder)\..\..\workshop\content\261550</WorkshopFolder>
+    <HarmonyModuleDir Condition="'$(HarmonyModuleDir)' == ''">$(WorkshopFolder)\2859188632</HarmonyModuleDir>
+    <McmModuleDir Condition="'$(McmModuleDir)' == ''">$(WorkshopFolder)\2859238197</McmModuleDir>
+  </PropertyGroup>
 </Project>
