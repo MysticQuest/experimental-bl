@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MCM.Abstractions.Attributes;
 using MCM.Abstractions.Attributes.v2;
 using MCM.Abstractions.Base.Global;
@@ -6,15 +7,11 @@ using TaleWorlds.Core;
 
 namespace MasteryCurve
 {
-    /// <summary>
-    /// Everything here is phrased as something the player can notice while playing.
-    /// The curve maths behind it lives in <see cref="Curve"/>; none of it is exposed directly.
-    /// </summary>
     public sealed class Settings : AttributeGlobalSettings<Settings>
     {
         private const string Career = "Your career";
         private const string Feel = "How it feels";
-        private const string Practise = "Skills that are hard to practise";
+        private const string Rates = "Skill XP rates";
         private const string DebugGroup = "Debug tools";
 
         public override string Id => "MasteryCurve_v1";
@@ -22,142 +19,234 @@ namespace MasteryCurve
         public override string FolderName => "MasteryCurve";
         public override string FormatType => "json2";
 
-        [SettingPropertyBool("Enabled", RequireRestart = true,
-            HintText = "Turn off to play with vanilla progression. Reload the campaign after changing this.")]
-        [SettingPropertyGroup(Career)]
+        [SettingPropertyBool("Enabled", Order = 0, RequireRestart = true,
+            HintText = "Off leaves vanilla progression alone. Reload the campaign after changing this.")]
+        [SettingPropertyGroup(Career, GroupOrder = 0)]
         public bool Enabled { get; set; } = true;
 
-        [SettingPropertyInteger("You master a skill at character level", 25, 44, "0", RequireRestart = false,
-            HintText = "Your best skill reaches 275 here. Nobody who spreads themselves thin will ever pass that number.")]
-        [SettingPropertyGroup(Career)]
+        [SettingPropertyInteger("You master a skill at character level", 25, 44, "0", Order = 1, RequireRestart = false,
+            HintText = "Your best skill reaches 275 here. A character who spreads themselves thin never passes it.")]
+        [SettingPropertyGroup(Career, GroupOrder = 0)]
         public int Level275 { get; set; } = 37;
 
-        [SettingPropertyInteger("You perfect a skill at character level", 30, 52, "0", RequireRestart = false,
-            HintText = "Your best skill reaches 330 here. Needs 10 focus and 10 in the attribute that governs it.")]
-        [SettingPropertyGroup(Career)]
+        [SettingPropertyInteger("You perfect a skill at character level", 30, 52, "0", Order = 2, RequireRestart = false,
+            HintText = "Your best skill reaches 330 here. Needs 10 focus and 10 in the governing attribute.")]
+        [SettingPropertyGroup(Career, GroupOrder = 0)]
         public int Level330 { get; set; } = 44;
 
-        [SettingPropertyFloatingInteger("A whole career takes this much longer than vanilla", 0.5f, 6f, "0.0",
+        [SettingPropertyFloatingInteger("A career takes this much longer than vanilla", 0.5f, 6f, "0.0", Order = 3,
             RequireRestart = false,
-            HintText = "2.0 means roughly twice as long as a normal campaign before you run out of things to improve.")]
-        [SettingPropertyGroup(Career)]
+            HintText = "2.0 is roughly twice as long before you run out of things to improve.")]
+        [SettingPropertyGroup(Career, GroupOrder = 0)]
         public float CareerLength { get; set; } = 2f;
 
-        [SettingPropertyInteger("Skills you plan to specialise in", 2, 6, "0", RequireRestart = false,
-            HintText = "Used to set the pace. Spread yourself wider than this and everything simply takes longer.")]
-        [SettingPropertyGroup(Career)]
+        [SettingPropertyInteger("Skills you plan to specialise in", 2, 6, "0", Order = 4, RequireRestart = false,
+            HintText = "Sets the pace. Spread wider than this and everything takes longer.")]
+        [SettingPropertyGroup(Career, GroupOrder = 0)]
         public int FocusedSkills { get; set; } = 3;
 
-        [SettingPropertyFloatingInteger("How fast skills rise early on", 1f, 5f, "0.0", RequireRestart = false,
-            HintText = "1 is slow and believable. 5 is vanilla, where a single skirmish can be worth twenty levels in four skills at once.")]
-        [SettingPropertyGroup(Feel)]
+        [SettingPropertyFloatingInteger("How fast skills rise early on", 1f, 5f, "0.0", Order = 0, RequireRestart = false,
+            HintText = "1 is slow. 5 is vanilla, where one skirmish can be worth twenty levels across four skills.")]
+        [SettingPropertyGroup(Feel, GroupOrder = 1)]
         public float EarlySpeed { get; set; } = 3.3f;
 
-        [SettingPropertyFloatingInteger("How punishing the last levels are", 1f, 5f, "0.0", RequireRestart = false,
-            HintText = "5 is vanilla, where the final handful of levels cost more than everything before them. Lower makes the summit a climb rather than a wall.")]
-        [SettingPropertyGroup(Feel)]
+        [SettingPropertyFloatingInteger("How punishing the last levels are", 1f, 5f, "0.0", Order = 1, RequireRestart = false,
+            HintText = "5 is vanilla, where the final levels cost more than everything before them.")]
+        [SettingPropertyGroup(Feel, GroupOrder = 1)]
         public float SummitHarshness { get; set; } = 3f;
 
-        [SettingPropertyInteger("Focus points you can pour into one skill", 5, 10, "0", RequireRestart = true,
-            HintText = "Vanilla stops at 5. The character screen only draws five pips, so anything above that is real but not yet shown.")]
-        [SettingPropertyGroup(Feel)]
+        [SettingPropertyInteger("Focus points you can put into one skill", 5, 10, "0", Order = 2, RequireRestart = true,
+            HintText = "Vanilla stops at 5.")]
+        [SettingPropertyGroup(Feel, GroupOrder = 1)]
         public int MaxFocusPerSkill { get; set; } = 10;
 
-        [SettingPropertyBool("Later focus points in a skill cost more", RequireRestart = false,
-            HintText = "Turns mastering one skill into a real commitment: 18 points rather than 10.")]
-        [SettingPropertyGroup(Feel)]
+        [SettingPropertyBool("Later focus points in a skill cost more", Order = 3, RequireRestart = false,
+            HintText = "Points 1 to 4 cost 1 each, 5 to 8 cost 2 each, 9 and 10 cost 3 each. 18 points for a mastered skill instead of 10.")]
+        [SettingPropertyGroup(Feel, GroupOrder = 1)]
         public bool EscalatingFocusCost { get; set; } = true;
 
-        [SettingPropertyBool("Pay more for skills you rarely get to practise", RequireRestart = false,
-            HintText = "Engineering only earns during a siege. Trade only earns against your own profit. This pays them more per opportunity.")]
-        [SettingPropertyGroup(Practise)]
-        public bool PerSkillMultipliers { get; set; } = true;
+        // --- Skill XP rates. 1.0 is the game's own award rate; higher pays more per event. ---
 
-        [SettingPropertyFloatingInteger("Trade", 1f, 6f, "0.0", RequireRestart = false,
-            HintText = "Earns half a point per denar of profit and nothing else. Mastering it means millions in trade.")]
-        [SettingPropertyGroup(Practise)]
-        public float TradeMultiplier { get; set; } = 3f;
+        [SettingPropertyFloatingInteger("One Handed", 0.25f, 6f, "0.00", Order = 0, RequireRestart = false,
+            HintText = "Earns per combat hit.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float OneHandedMultiplier { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Engineering", 1f, 6f, "0.0", RequireRestart = false,
-            HintText = "Every single source is a siege. Between wars it earns nothing at all.")]
-        [SettingPropertyGroup(Practise)]
-        public float EngineeringMultiplier { get; set; } = 3f;
+        [SettingPropertyFloatingInteger("Two Handed", 0.25f, 6f, "0.00", Order = 1, RequireRestart = false,
+            HintText = "Earns per combat hit.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float TwoHandedMultiplier { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Tactics", 1f, 6f, "0.0", RequireRestart = false,
-            HintText = "Only pays when you let a battle simulate, and then only a sliver.")]
-        [SettingPropertyGroup(Practise)]
-        public float TacticsMultiplier { get; set; } = 2.5f;
+        [SettingPropertyFloatingInteger("Polearm", 0.25f, 6f, "0.00", Order = 2, RequireRestart = false,
+            HintText = "Earns per combat hit.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float PolearmMultiplier { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Charm", 1f, 6f, "0.0", RequireRestart = false,
-            HintText = "Pays only when someone actually warms to you.")]
-        [SettingPropertyGroup(Practise)]
-        public float CharmMultiplier { get; set; } = 2.5f;
+        [SettingPropertyFloatingInteger("Bow", 0.25f, 6f, "0.00", Order = 3, RequireRestart = false,
+            HintText = "Earns per hit, scaled by shot difficulty.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float BowMultiplier { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Steward", 1f, 6f, "0.0", RequireRestart = false,
-            HintText = "Most of what feeds it needs a fief first.")]
-        [SettingPropertyGroup(Practise)]
-        public float StewardMultiplier { get; set; } = 1.6f;
+        [SettingPropertyFloatingInteger("Crossbow", 0.25f, 6f, "0.00", Order = 4, RequireRestart = false,
+            HintText = "Earns per hit, scaled by shot difficulty.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float CrossbowMultiplier { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Medicine", 1f, 6f, "0.0", RequireRestart = false,
-            HintText = "Steady, but the awards are tiny -- a fraction of a point per casualty.")]
-        [SettingPropertyGroup(Practise)]
-        public float MedicineMultiplier { get; set; } = 1.5f;
+        [SettingPropertyFloatingInteger("Throwing", 0.25f, 6f, "0.00", Order = 5, RequireRestart = false,
+            HintText = "Earns per hit, scaled by shot difficulty.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float ThrowingMultiplier { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Roguery", 0.5f, 6f, "0.0", RequireRestart = false,
-            HintText = "Fed by nineteen different things, more than any other skill. Below 1.0 slows it back down.")]
-        [SettingPropertyGroup(Practise)]
+        [SettingPropertyFloatingInteger("Riding", 0.25f, 6f, "0.00", Order = 6, RequireRestart = false,
+            HintText = "Earns per mounted hit and per distance ridden.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float RidingMultiplier { get; set; } = 1f;
+
+        [SettingPropertyFloatingInteger("Athletics", 0.25f, 6f, "0.00", Order = 7, RequireRestart = false,
+            HintText = "Earns per distance travelled on foot and per kill on foot.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float AthleticsMultiplier { get; set; } = 1f;
+
+        [SettingPropertyFloatingInteger("Smithing", 0.25f, 6f, "0.00", Order = 8, RequireRestart = false,
+            HintText = "Earns from smelting, refining and forging.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float SmithingMultiplier { get; set; } = 1f;
+
+        [SettingPropertyFloatingInteger("Scouting", 0.25f, 6f, "0.00", Order = 9, RequireRestart = false,
+            HintText = "Earns from terrain crossed, tracks found and hideouts spotted.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float ScoutingMultiplier { get; set; } = 1.2f;
+
+        [SettingPropertyFloatingInteger("Roguery", 0.25f, 6f, "0.00", Order = 10, RequireRestart = false,
+            HintText = "Fed by nineteen separate events, more than any other skill. Below 1.0 slows it to match the rest.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
         public float RogueryMultiplier { get; set; } = 0.8f;
 
-        [SettingPropertyBool("Enable debug tools", RequireRestart = false,
-            HintText = "Turns on the buttons below. They change your character immediately and cannot be undone.")]
-        [SettingPropertyGroup(DebugGroup)]
+        [SettingPropertyFloatingInteger("Medicine", 0.25f, 6f, "0.00", Order = 11, RequireRestart = false,
+            HintText = "Earns a fraction of a point per casualty healed.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float MedicineMultiplier { get; set; } = 1.5f;
+
+        [SettingPropertyFloatingInteger("Leadership", 0.25f, 6f, "0.00", Order = 12, RequireRestart = false,
+            HintText = "Earns per troop recruited and upgraded, and while leading an army.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float LeadershipMultiplier { get; set; } = 1.8f;
+
+        [SettingPropertyFloatingInteger("Steward", 0.25f, 6f, "0.00", Order = 13, RequireRestart = false,
+            HintText = "Five sources, but most of them need a fief first.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float StewardMultiplier { get; set; } = 1.6f;
+
+        [SettingPropertyFloatingInteger("Tactics", 0.25f, 6f, "0.00", Order = 14, RequireRestart = false,
+            HintText = "One source, and only when you let a battle simulate.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float TacticsMultiplier { get; set; } = 2.5f;
+
+        [SettingPropertyFloatingInteger("Charm", 0.25f, 6f, "0.00", Order = 15, RequireRestart = false,
+            HintText = "One source: relation gained.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float CharmMultiplier { get; set; } = 2.5f;
+
+        [SettingPropertyFloatingInteger("Engineering", 0.25f, 6f, "0.00", Order = 16, RequireRestart = false,
+            HintText = "Every source is a siege. Between wars it earns nothing at all.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float EngineeringMultiplier { get; set; } = 3f;
+
+        [SettingPropertyFloatingInteger("Trade", 0.25f, 6f, "0.00", Order = 17, RequireRestart = false,
+            HintText = "Earns half a point per denar of profit and nothing else.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float TradeMultiplier { get; set; } = 3f;
+
+        [SettingPropertyFloatingInteger("Mariner", 0.25f, 6f, "0.00", Order = 18, RequireRestart = false,
+            HintText = "Earns per hit and kill aboard ship, and on the daily tick. Needs the naval content.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float MarinerMultiplier { get; set; } = 1f;
+
+        [SettingPropertyFloatingInteger("Boatswain", 0.25f, 6f, "0.00", Order = 19, RequireRestart = false,
+            HintText = "Earns when a ship takes damage or is repaired, and on the daily tick. Needs the naval content.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float BoatswainMultiplier { get; set; } = 1.5f;
+
+        [SettingPropertyFloatingInteger("Shipmaster", 0.25f, 6f, "0.00", Order = 20, RequireRestart = false,
+            HintText = "Earns per distance sailed and on the daily tick. Needs the naval content.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 2)]
+        public float ShipmasterMultiplier { get; set; } = 1.2f;
+
+        // --- Debug ---
+
+        [SettingPropertyBool("Enable debug tools", Order = 0, RequireRestart = false,
+            HintText = "Turns on the buttons below. They change your character immediately.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 3)]
         public bool DebugEnabled { get; set; } = false;
 
-        [SettingPropertyInteger("How much each button gives", 1, 20, "0", RequireRestart = false,
-            HintText = "Points or levels added per press.")]
-        [SettingPropertyGroup(DebugGroup)]
-        public int DebugAmount { get; set; } = 5;
+        [SettingPropertyButton("Focus point", Content = "Add", Order = 1, RequireRestart = false,
+            HintText = "Adds one unspent focus point.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 3)]
+        public Action AddFocusPoint { get; set; } = DebugTools.AddFocusPoint;
 
-        [SettingPropertyButton("Focus points", Content = "Give", RequireRestart = false,
-            HintText = "Adds unspent focus points to your character.")]
-        [SettingPropertyGroup(DebugGroup)]
-        public Action GiveFocusPoints { get; set; } = () => DebugTools.GiveFocusPoints();
+        [SettingPropertyButton("Attribute point", Content = "Add", Order = 2, RequireRestart = false,
+            HintText = "Adds one unspent attribute point.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 3)]
+        public Action AddAttributePoint { get; set; } = DebugTools.AddAttributePoint;
 
-        [SettingPropertyButton("Attribute points", Content = "Give", RequireRestart = false,
-            HintText = "Adds unspent attribute points to your character.")]
-        [SettingPropertyGroup(DebugGroup)]
-        public Action GiveAttributePoints { get; set; } = () => DebugTools.GiveAttributePoints();
+        [SettingPropertyButton("Character level", Content = "Add", Order = 3, RequireRestart = false,
+            HintText = "Adds one character level, with the points that come with it.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 3)]
+        public Action AddCharacterLevel { get; set; } = DebugTools.AddCharacterLevel;
 
-        [SettingPropertyButton("Character levels", Content = "Give", RequireRestart = false,
-            HintText = "Raises your character level directly, with the focus and attribute points that come with it.")]
-        [SettingPropertyGroup(DebugGroup)]
-        public Action GiveCharacterLevels { get; set; } = () => DebugTools.GiveCharacterLevels();
+        [SettingPropertyButton("Unspent points", Content = "Reset", Order = 4, RequireRestart = false,
+            HintText = "Clears all unspent focus and attribute points.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 3)]
+        public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
-        [SettingPropertyButton("Report where you stand", Content = "Show", RequireRestart = false,
-            HintText = "Prints your level, points and the XP the next few skill levels will cost.")]
-        [SettingPropertyGroup(DebugGroup)]
-        public Action ReportState { get; set; } = () => DebugTools.Report();
+        [SettingPropertyButton("Current status", Content = "Show", Order = 5, RequireRestart = false,
+            HintText = "Prints your level, your unspent points and what the next levels cost.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 3)]
+        public Action CurrentStatus { get; set; } = DebugTools.CurrentStatus;
 
         internal float CurveExponent => Lerp(0.8f, 2.1f, (EarlySpeed - 1f) / 4f);
 
         internal float PenaltySlope => Lerp(0.05f, 0.12f, (SummitHarshness - 1f) / 4f);
 
-        /// <summary>Vanilla's own "long campaign" is about six million raw XP, so that is the unit.</summary>
+        /// <summary>A long vanilla campaign is about six million raw XP, so that is the unit.</summary>
         internal float CareerXp => CareerLength * 6000000f;
 
         private static float Lerp(float a, float b, float t) => a + (b - a) * Math.Max(0f, Math.Min(1f, t));
 
+        private Dictionary<string, Func<float>>? _lookup;
+
+        /// <summary>
+        /// Naval skills are matched by string id rather than a reference, so this still builds and
+        /// runs without the naval content installed -- those ids simply never turn up.
+        /// </summary>
         public float MultiplierFor(SkillObject skill)
         {
-            var id = skill.StringId;
-            if (id == DefaultSkills.Trade.StringId) return TradeMultiplier;
-            if (id == DefaultSkills.Engineering.StringId) return EngineeringMultiplier;
-            if (id == DefaultSkills.Tactics.StringId) return TacticsMultiplier;
-            if (id == DefaultSkills.Charm.StringId) return CharmMultiplier;
-            if (id == DefaultSkills.Steward.StringId) return StewardMultiplier;
-            if (id == DefaultSkills.Medicine.StringId) return MedicineMultiplier;
-            if (id == DefaultSkills.Roguery.StringId) return RogueryMultiplier;
-            return 1f;
+            _lookup ??= new Dictionary<string, Func<float>>
+            {
+                ["Mariner"] = () => MarinerMultiplier,
+                ["Boatswain"] = () => BoatswainMultiplier,
+                ["Shipmaster"] = () => ShipmasterMultiplier,
+                [DefaultSkills.OneHanded.StringId] = () => OneHandedMultiplier,
+                [DefaultSkills.TwoHanded.StringId] = () => TwoHandedMultiplier,
+                [DefaultSkills.Polearm.StringId] = () => PolearmMultiplier,
+                [DefaultSkills.Bow.StringId] = () => BowMultiplier,
+                [DefaultSkills.Crossbow.StringId] = () => CrossbowMultiplier,
+                [DefaultSkills.Throwing.StringId] = () => ThrowingMultiplier,
+                [DefaultSkills.Riding.StringId] = () => RidingMultiplier,
+                [DefaultSkills.Athletics.StringId] = () => AthleticsMultiplier,
+                [DefaultSkills.Crafting.StringId] = () => SmithingMultiplier,
+                [DefaultSkills.Scouting.StringId] = () => ScoutingMultiplier,
+                [DefaultSkills.Roguery.StringId] = () => RogueryMultiplier,
+                [DefaultSkills.Medicine.StringId] = () => MedicineMultiplier,
+                [DefaultSkills.Leadership.StringId] = () => LeadershipMultiplier,
+                [DefaultSkills.Steward.StringId] = () => StewardMultiplier,
+                [DefaultSkills.Tactics.StringId] = () => TacticsMultiplier,
+                [DefaultSkills.Charm.StringId] = () => CharmMultiplier,
+                [DefaultSkills.Engineering.StringId] = () => EngineeringMultiplier,
+                [DefaultSkills.Trade.StringId] = () => TradeMultiplier
+            };
+
+            return _lookup.TryGetValue(skill.StringId, out var value) ? value() : 1f;
         }
     }
 }

@@ -1,91 +1,100 @@
 using System;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.CharacterDevelopment;
 using TaleWorlds.Library;
 
 namespace MasteryCurve
 {
     /// <summary>
-    /// The buttons behind the debug section. Everything used here is public game API, so nothing
-    /// is patched or reflected; the point is to reach a late-career character without playing one.
+    /// The buttons behind the debug section. Everything used here is public game API.
     /// </summary>
     internal static class DebugTools
     {
-        internal static void GiveFocusPoints()
+        internal static void AddFocusPoint() => Run(developer =>
         {
-            Run("focus points", (developer, amount) =>
-            {
-                developer.UnspentFocusPoints += amount;
-                return $"{amount} focus points added ({developer.UnspentFocusPoints} unspent).";
-            });
-        }
+            developer.UnspentFocusPoints += 1;
+            return $"{developer.UnspentFocusPoints} focus points unspent.";
+        });
 
-        internal static void GiveAttributePoints()
+        internal static void AddAttributePoint() => Run(developer =>
         {
-            Run("attribute points", (developer, amount) =>
-            {
-                developer.UnspentAttributePoints += amount;
-                return $"{amount} attribute points added ({developer.UnspentAttributePoints} unspent).";
-            });
-        }
+            developer.UnspentAttributePoints += 1;
+            return $"{developer.UnspentAttributePoints} attribute points unspent.";
+        });
 
-        internal static void GiveCharacterLevels()
+        internal static void AddCharacterLevel() => Run(developer =>
         {
-            Run("character levels", (developer, amount) =>
-            {
-                var target = developer.Hero.Level + amount;
-                developer.SetInitialLevel(target);
-                developer.CheckLevel(false);
-                return $"Now character level {developer.Hero.Level}, "
-                       + $"{developer.UnspentFocusPoints} focus and {developer.UnspentAttributePoints} attribute points unspent.";
-            });
-        }
+            developer.SetInitialLevel(developer.Hero.Level + 1);
+            developer.CheckLevel(false);
+            return $"Character level {developer.Hero.Level}, "
+                   + $"{developer.UnspentFocusPoints} focus and {developer.UnspentAttributePoints} attribute points unspent.";
+        });
 
-        internal static void Report()
+        internal static void ResetPoints() => Run(developer =>
         {
-            Run("report", (developer, _) =>
-            {
-                var hero = developer.Hero;
-                var next = hero.Level + 1;
-                return $"Level {hero.Level} · {developer.UnspentFocusPoints} focus, "
-                       + $"{developer.UnspentAttributePoints} attribute unspent · "
-                       + $"level {next} needs {Curve.CharacterXpRequired(next):N0} raw XP · "
-                       + $"skill 100 costs {Curve.SkillXpRequired(100):N0}, "
-                       + $"275 costs {Curve.SkillXpRequired(275):N0}, "
-                       + $"330 costs {Curve.SkillXpRequired(Curve.SkillCap):N0}.";
-            });
-        }
+            developer.UnspentFocusPoints = 0;
+            developer.UnspentAttributePoints = 0;
+            return "Unspent focus and attribute points cleared.";
+        });
 
-        private static void Run(string what, Func<TaleWorlds.CampaignSystem.CharacterDevelopment.HeroDeveloper, int, string> action)
+        internal static void CurrentStatus() => Run(developer =>
+        {
+            var hero = developer.Hero;
+            var next = hero.Level + 1;
+            return $"Level {hero.Level}, {developer.UnspentFocusPoints} focus and "
+                   + $"{developer.UnspentAttributePoints} attribute points unspent. "
+                   + $"Level {next} needs {Curve.CharacterXpRequired(next):N0} raw XP. "
+                   + $"Skill 100 costs {Curve.SkillXpRequired(100):N0}, "
+                   + $"275 costs {Curve.SkillXpRequired(275):N0}, "
+                   + $"330 costs {Curve.SkillXpRequired(Curve.SkillCap):N0}.";
+        });
+
+        private static void Run(Func<HeroDeveloper, string> action)
         {
             var settings = Settings.Instance;
             if (settings == null || !settings.DebugEnabled)
             {
-                Notify("Mastery Curve: turn on the debug tools first.");
-                return;
-            }
-
-            var hero = Hero.MainHero;
-            if (Campaign.Current == null || hero?.HeroDeveloper == null)
-            {
-                Notify("Mastery Curve: load a campaign first.");
+                Notify("Mastery Curve: enable the debug tools first.");
                 return;
             }
 
             try
             {
-                var message = action(hero.HeroDeveloper, Math.Max(1, settings.DebugAmount));
-                Notify("Mastery Curve: " + message);
+                // Reached from the main menu there is no campaign at all, and touching
+                // Hero.MainHero there throws rather than returning null.
+                if (Campaign.Current == null)
+                {
+                    Notify("Mastery Curve: load a campaign first.");
+                    return;
+                }
+
+                var developer = Hero.MainHero?.HeroDeveloper;
+                if (developer == null)
+                {
+                    Notify("Mastery Curve: no character to change yet.");
+                    return;
+                }
+
+                Notify("Mastery Curve: " + action(developer));
             }
             catch (Exception exception)
             {
-                Notify($"Mastery Curve: could not change {what}.");
-                Debug.Print($"[MasteryCurve] Debug action '{what}' failed: {exception}");
+                Notify("Mastery Curve: load a campaign first.");
+                Debug.Print($"[MasteryCurve] Debug action failed: {exception}");
             }
         }
 
         private static void Notify(string message)
         {
-            InformationManager.DisplayMessage(new InformationMessage(message));
+            try
+            {
+                InformationManager.DisplayMessage(new InformationMessage(message));
+            }
+            catch
+            {
+                // No message system outside a running game; the log line below still lands.
+            }
+
             Debug.Print("[MasteryCurve] " + message);
         }
     }
