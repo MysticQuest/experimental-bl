@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkillLearningRate", "SkillLearningRate\SkillLearningRate.csproj", "{A3C1E8B0-4D2F-4A11-9B6E-7C1D2E3F4A55}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasteryCurve", "MasteryCurve\MasteryCurve.csproj", "{B4D2F9A1-7C3E-4F55-9A88-2E1C7D6B3F90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,5 +17,9 @@ Global
 		{A3C1E8B0-4D2F-4A11-9B6E-7C1D2E3F4A55}.Debug|x64.Build.0 = Debug|x64
 		{A3C1E8B0-4D2F-4A11-9B6E-7C1D2E3F4A55}.Release|x64.ActiveCfg = Release|x64
 		{A3C1E8B0-4D2F-4A11-9B6E-7C1D2E3F4A55}.Release|x64.Build.0 = Release|x64
+		{B4D2F9A1-7C3E-4F55-9A88-2E1C7D6B3F90}.Debug|x64.ActiveCfg = Debug|x64
+		{B4D2F9A1-7C3E-4F55-9A88-2E1C7D6B3F90}.Debug|x64.Build.0 = Debug|x64
+		{B4D2F9A1-7C3E-4F55-9A88-2E1C7D6B3F90}.Release|x64.ActiveCfg = Release|x64
+		{B4D2F9A1-7C3E-4F55-9A88-2E1C7D6B3F90}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 EndGlobal

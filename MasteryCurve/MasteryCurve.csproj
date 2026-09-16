@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>MasteryCurve</RootNamespace>
+    <AssemblyName>MasteryCurve</AssemblyName>
+    <ModuleName>MasteryCurve</ModuleName>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>x64</Platforms>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bannerlord.ReferenceAssemblies.Core" Version="1.4.8.119303" PrivateAssets="all" />
+    <PackageReference Include="Bannerlord.ReferenceAssemblies.Native" Version="1.4.8.119303" PrivateAssets="all" />
+    <PackageReference Include="Bannerlord.ReferenceAssemblies.SandBox" Version="1.4.8.119303" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    Harmony and MCM ship as Steam Workshop modules, so they are referenced straight
+    out of the Workshop folder. Private=false keeps them out of our output: the game
+    already loads them from their own modules.
+  -->
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyModuleDir)\bin\Win64_Shipping_Client\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="MCMv5">
+      <HintPath>$(McmModuleDir)\bin\Win64_Shipping_Client\MCMv5.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="VerifyWorkshopDependencies" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(HarmonyModuleDir)\bin\Win64_Shipping_Client\0Harmony.dll')"
+           Text="Harmony not found at $(HarmonyModuleDir). Subscribe to Harmony on the Steam Workshop, or override WorkshopFolder in Directory.Build.props.user." />
+    <Error Condition="!Exists('$(McmModuleDir)\bin\Win64_Shipping_Client\MCMv5.dll')"
+           Text="MCM v5 not found at $(McmModuleDir). Subscribe to Mod Configuration Menu v5 on the Steam Workshop, or override WorkshopFolder in Directory.Build.props.user." />
+  </Target>
+
+  <Target Name="CopyModuleToGame" AfterTargets="Build">
+    <PropertyGroup>
+      <ModuleDir>$(GameFolder)\Modules\$(ModuleName)</ModuleDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(ModuleDir)\bin\Win64_Shipping_Client" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\_Module\SubModule.xml" DestinationFolder="$(ModuleDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
