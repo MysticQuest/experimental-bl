@@ -1,4 +1,5 @@
 using System;
+using Bannerlord.UIExtenderEx;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
@@ -27,6 +28,19 @@ namespace MasteryCurve
             catch (Exception exception)
             {
                 Debug.Print($"[MasteryCurve] Failed to apply Harmony patches: {exception}");
+            }
+
+            // The second row of focus pips. Kept separate so a UI failure cannot take the
+            // progression changes down with it.
+            try
+            {
+                var extender = UIExtender.Create(HarmonyId);
+                extender.Register(typeof(SubModule).Assembly);
+                extender.Enable();
+            }
+            catch (Exception exception)
+            {
+                Debug.Print($"[MasteryCurve] Focus pip row unavailable: {exception}");
             }
         }
 
