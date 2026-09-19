@@ -145,10 +145,22 @@ namespace ProgressionExpanded
         /// spoils straight into the packs - so putting the kit into the same roster means the kit
         /// is what arrives, by the same route the set did.
         /// </remarks>
-        internal void TakeTheHideoutsSpoils(ItemRoster? loot)
+        internal void TakeTheHideoutsSpoils(PartyBase? winner, ItemRoster? loot)
         {
-            if (loot == null || _kitGiven) return;
+            // Says why it passed, once. The first version of this returned in silence on a
+            // condition it never named, and the log could only show that the site was reached.
             if (!Mod.On || !(Settings.Instance?.StartWithNothing ?? false)) return;
+
+            if (_kitGiven) return;
+
+            if (winner != PartyBase.MainParty || loot == null)
+            {
+                Log.Write($"Burlap sack: loot passed over - winner {winner?.Name?.ToString() ?? "null"}, "
+                          + $"{(loot == null ? "no roster" : loot.Count + " stacks")}");
+                return;
+            }
+
+            if (loot.Count == 0) return;
 
             var taken = new List<string>();
             foreach (var element in loot)
@@ -524,15 +536,27 @@ namespace ProgressionExpanded
     [HarmonyPatch]
     internal static class HideoutLootPatch
     {
-        private const string Behaviour =
-            "TaleWorlds.CampaignSystem.CampaignBehaviors.HideoutCampaignBehavior";
-
-        private static bool Prepare() => Target() != null;
-
-        private static MethodBase? Target() =>
-            AccessTools.Method(AccessTools.TypeByName(Behaviour), "OnCollectLootItems");
-
-        private static MethodBase TargetMethod() => Target()!;
+        /// <summary>
+        /// Both collectors, because a hideout fires both.
+        /// </summary>
+        /// <remarks>
+        /// The hideout behaviour adds its own share, and the battle behaviour adds the spoils of
+        /// the fight itself. Patching only the first saw the call happen and find nothing worth
+        /// taking, which is exactly what the log showed: the site was reached and then passed over
+        /// in silence.
+        /// </remarks>
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            foreach (var name in new[]
+                     {
+                         "TaleWorlds.CampaignSystem.CampaignBehaviors.HideoutCampaignBehavior",
+                         "TaleWorlds.CampaignSystem.CampaignBehaviors.BattleCampaignBehavior",
+                     })
+            {
+                var method = AccessTools.Method(AccessTools.TypeByName(name), "OnCollectLootItems");
+                if (method != null) yield return method;
+            }
+        }
 
         [HarmonyPostfix]
         private static void Trim(PartyBase winnerParty, ItemRoster gainedLoots)
@@ -541,8 +565,7 @@ namespace ProgressionExpanded
 
             try
             {
-                if (winnerParty != PartyBase.MainParty) return;
-                DestituteStartBehavior.Current?.TakeTheHideoutsSpoils(gainedLoots);
+                DestituteStartBehavior.Current?.TakeTheHideoutsSpoils(winnerParty, gainedLoots);
             }
             catch (Exception exception)
             {
