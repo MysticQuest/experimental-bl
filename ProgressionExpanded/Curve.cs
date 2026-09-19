@@ -123,10 +123,19 @@ namespace ProgressionExpanded
             return _skillXp[skillLevel];
         }
 
+        /// <summary>
+        /// Total earned XP a character level costs.
+        /// </summary>
+        /// <remarks>
+        /// Level 1 costs nothing, which is the one deliberate departure from vanilla's own table.
+        /// Vanilla asks for a single point there, so a character who has earned literally nothing
+        /// is level 0 until the first scrap of XP arrives -- which it does within a few paces of
+        /// leaving the first town, and the level pops for no reason the player can see. Starting
+        /// at 1 is what everyone assumes is happening anyway.
+        /// </remarks>
         public static int CharacterXpRequired(int level)
         {
-            if (level <= 0) return 0;
-            if (level == 1) return 1;
+            if (level <= 1) return 0;
             if (level > MaxCharacterLevel) return int.MaxValue;
             var v = _charScale * level * level * level;
             return v >= int.MaxValue ? int.MaxValue : (int)v;

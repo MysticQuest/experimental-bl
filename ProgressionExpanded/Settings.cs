@@ -243,7 +243,7 @@ namespace ProgressionExpanded
         // --- Global skill bonuses ---
 
         [SettingPropertyBool("Global skill bonuses", Order = 0, RequireRestart = false,
-            HintText = "Rewards for mastering a skill that are yours alone, listed on the character screen beside the game's own. Tactics: enemy parties grow less willing to engage you, you break off a losing fight for half the usual losses, you read the defences of any stronghold within a widening reach, and your reinforcement waves arrive larger. Scouting: the same reach on stronghold defences, through whoever scouts for your party. Roguery: harder-hitting civilian weapons, and alleys that earn more, draw less heat, hold more men, warn you sooner and turn up better recruits. Trade: a chance a caravan or workshop pays double. Turn this off and every one of them disappears from the character screen as well.")]
+            HintText = "Extra rewards for mastering a skill, yours alone. Tactics, Scouting, Roguery and Trade each gain several; each is listed on its own skill card, worded like the game's own. Off, they leave the character screen as well rather than sitting there reading zero.")]
         [SettingPropertyGroup(Skills, GroupOrder = 3)]
         public bool SkillBonuses { get; set; } = true;
 
@@ -255,14 +255,14 @@ namespace ProgressionExpanded
 
 
         [SettingPropertyBool("Bandits may join you outright", Order = 1, RequireRestart = false,
-            HintText = "At high Roguery a lone bandit party sometimes falls in behind you instead of fighting. Unlike everything else here this rewrites the encounter rather than adjusting a number, so it is off by default. Turn it off first if a campaign starts crashing.")]
+            HintText = "At high Roguery a lone bandit party sometimes falls in behind you instead of fighting. Unlike everything else here it rewrites the encounter rather than adjusting a number, so turn it off first if a campaign starts misbehaving.")]
         [SettingPropertyGroup(Skills, GroupOrder = 3)]
         public bool BanditsMayJoin { get; set; } = true;
 
         // --- Attribute bonuses ---
 
         [SettingPropertyBool("Attribute bonuses", Order = 0, RequireRestart = false,
-            HintText = "Rewards for raising an attribute, on top of the learning rate and ceiling it already gives. Vigor: hit points, momentum carried through a hit, knocking enemies back, resistance to illness. Control: weapon handling, stagger resistance, recovery after blocking, and resistance to being knocked back, knocked down or dismounted. Endurance: damage resistance, mount speed, running speed, smithing stamina. Cunning: a larger share of battle loot, a chance to cheat death, and a crime rating that fades faster. Social: companion limit, skill XP for the rest of your clan, party morale. Intelligence: learning rate and learning limit on every skill, and faster smithing research. They are listed on the attribute card when you open it, which needs Character screen changes on.")]
+            HintText = "Something each attribute buys the moment the point is spent, on top of the learning rate and ceiling it already gives -- three or four apiece, covering how hard you hit, how well you take a hit, how your clan does and how fast you learn. Each attribute lists its own on its card, which needs Character screen changes on.")]
         [SettingPropertyGroup(Attributes, GroupOrder = 4)]
         public bool AttributeBonuses { get; set; } = true;
 
