@@ -5,6 +5,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameState;
 using System.Reflection;
 using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.CampaignSystem.Roster;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
@@ -124,6 +125,45 @@ namespace ProgressionExpanded
         {
             dataStore.SyncData("ProgressionExpanded_SweepPending", ref _sweepPending);
             dataStore.SyncData("ProgressionExpanded_TutorialPending", ref _tutorialPending);
+            dataStore.SyncData("ProgressionExpanded_KitGiven", ref _kitGiven);
+        }
+
+        /// <summary>Whether the hideout has already paid its one-off kit.</summary>
+        private bool _kitGiven;
+
+        /// <summary>
+        /// Replaces a hideout's spoils with a knife and a pair of boots, once per campaign.
+        /// </summary>
+        /// <remarks>
+        /// This is the reward that kept arriving as a full set. It is not a quest reward at all -
+        /// no quest in the game hands items to the player - it is the loot from the hideout
+        /// battle at the end of the stealth mission in Tevea, handed over by
+        /// HideoutCampaignBehavior.OnCollectLootItems.
+        ///
+        /// Emptying the roster it was given is enough: the game adds the kit to it afterwards, so
+        /// the loot screen still appears and still has something in it, which keeps the moment
+        /// intact rather than silently skipping it.
+        /// </remarks>
+        internal void TakeTheHideoutsSpoils(ItemRoster? loot)
+        {
+            if (loot == null || _kitGiven) return;
+            if (!Mod.On || !(Settings.Instance?.StartWithNothing ?? false)) return;
+
+            var taken = new List<string>();
+            foreach (var element in loot)
+                if (element.EquipmentElement.Item != null)
+                    taken.Add(element.EquipmentElement.Item.StringId + " x" + element.Amount);
+
+            loot.Clear();
+            _kitGiven = true;
+
+            var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
+            var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
+            if (knife != null) loot.AddToCounts(knife, 1);
+            if (shoes != null) loot.AddToCounts(shoes, 1);
+
+            Log.Write("Burlap sack: hideout spoils were " + string.Join(", ", taken.ToArray())
+                      + $"; left {knife?.StringId} (tier {knife?.Tier}) and {shoes?.StringId} (tier {shoes?.Tier})");
         }
 
         /// <summary>Whether the sack still has to be kept on by force.</summary>
@@ -476,4 +516,37 @@ namespace ProgressionExpanded
         }
     }
 
+
+    /// <summary>
+    /// Trims what a cleared hideout gives up, the one place the full set was coming from.
+    /// </summary>
+    [HarmonyPatch]
+    internal static class HideoutLootPatch
+    {
+        private const string Behaviour =
+            "TaleWorlds.CampaignSystem.CampaignBehaviors.HideoutCampaignBehavior";
+
+        private static bool Prepare() => Target() != null;
+
+        private static MethodBase? Target() =>
+            AccessTools.Method(AccessTools.TypeByName(Behaviour), "OnCollectLootItems");
+
+        private static MethodBase TargetMethod() => Target()!;
+
+        [HarmonyPostfix]
+        private static void Trim(PartyBase winnerParty, ItemRoster gainedLoots)
+        {
+            Guard.Touch("HideoutLoot");
+
+            try
+            {
+                if (winnerParty != PartyBase.MainParty) return;
+                DestituteStartBehavior.Current?.TakeTheHideoutsSpoils(gainedLoots);
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("HideoutLoot", exception);
+            }
+        }
+    }
 }
