@@ -48,11 +48,14 @@ namespace ProgressionExpanded
         /// gladius_b is the one the game calls simply Knife.
         ///
         /// The boots are not Imperial, deliberately. Every Empire pair is town gear - Fine Town
-        /// Boots, Folded Town Boots, Horseman Boots - which is the wrong look for someone who
-        /// owns a sack. Ragged Boots belong to no culture at all, so they suit any start.
+        /// Boots, Folded Town Boots, Horseman Boots - the wrong look for someone who owns a sack,
+        /// and none of them weak. Leather Shoes belong to no culture, so they suit any start, and
+        /// at three points of leg armour they are near the bottom of the ladder: only Moccasins
+        /// and a pair named Ladies Shoes come in lower, and both are odd on most characters.
+        /// Ragged Boots read better and protect more, which is the wrong way round here.
         /// </remarks>
         private const string Knife = "gladius_b";
-        private const string Boots = "ragged_boots";
+        private const string Boots = "leather_shoes";
 
         /// <summary>
         /// The kit, by name, with a filtered search only as a fallback.
