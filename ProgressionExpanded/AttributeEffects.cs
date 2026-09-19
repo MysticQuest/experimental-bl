@@ -130,7 +130,9 @@ namespace ProgressionExpanded
                 {
                     new Effect("companion limit", 1f / AttributeBonus.SocialPointsPerCompanion,
                         pointsPerUnit: AttributeBonus.SocialPointsPerCompanion),
-                    new Effect("skill XP for the rest of your clan", AttributeBonus.SocialClanLearning, percent: true),
+                    new Effect("skill XP for the rest of your clan", AttributeBonus.SocialClanLearning,
+                        percent: true),
+                    new Effect("party morale", AttributeBonus.SocialMorale, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Intelligence)
@@ -138,6 +140,7 @@ namespace ProgressionExpanded
                 {
                     new Effect("learning rate on every skill", AttributeBonus.IntelligenceLearning, percent: true),
                     new Effect("learning limit on every skill", AttributeBonus.IntelligenceCeiling),
+                    new Effect("smithing research", AttributeBonus.IntelligenceResearch, percent: true),
                 };
 
             return None;

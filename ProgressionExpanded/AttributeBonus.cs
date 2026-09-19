@@ -56,6 +56,8 @@ namespace ProgressionExpanded
         internal const float IntelligenceLearning = 0.01f; // learning rate, every skill
         internal const float IntelligenceCeiling = 1f;     // learning limit, every skill
         internal const float SocialClanLearning = 0.01f;   // skill XP for the rest of your clan
+        internal const float SocialMorale = 0.01f;         // party morale, under its own leader
+        internal const float IntelligenceResearch = 0.01f; // smithing parts research
 
         internal static bool Active()
         {
@@ -429,6 +431,88 @@ namespace ProgressionExpanded
             catch
             {
                 // Never throw mid-blow.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Social is what the men think of the person leading them.
+    /// </summary>
+    /// <remarks>
+    /// Morale gates desertion, marching speed and how a formation holds when it is losing, so a
+    /// percentage here is felt everywhere at once without being a combat number. Read from the
+    /// party's own leader, so an AI lord's Social does for his men what yours does for yours.
+    ///
+    /// Morale is clamped to a hundred further up, which is what keeps this modest: it shortens
+    /// the time spent climbing back after a defeat rather than raising the ceiling.
+    /// </remarks>
+    [HarmonyPatch(typeof(DefaultPartyMoraleModel), nameof(DefaultPartyMoraleModel.GetEffectivePartyMorale))]
+    internal static class SocialMoralePatch
+    {
+        [HarmonyPostfix]
+        private static void Hearten(MobileParty mobileParty, ref ExplainedNumber __result)
+        {
+            Guard.Touch("PartyMorale");
+
+            try
+            {
+                if (!AttributeBonus.Active() || mobileParty == null) return;
+
+                var social = AttributeBonus.Of(mobileParty.LeaderHero, DefaultCharacterAttributes.Social);
+                if (social > 0)
+                    __result.AddFactor(AttributeBonus.SocialMorale * social, SocialText);
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("PartyMorale", exception);
+            }
+        }
+
+        private static readonly TextObject SocialText = new TextObject("{=MCsoc}Social");
+    }
+
+    /// <summary>
+    /// Intelligence is working out how the thing was made.
+    /// </summary>
+    /// <remarks>
+    /// Smithing hides its parts behind research earned by smelting and forging, and unlocking
+    /// them is the part of the skill players actually complain about. This is the one bonus here
+    /// aimed at a grind rather than at a battle.
+    ///
+    /// The game counts research in whole points, and a tenth of a small number rounds to nothing,
+    /// so the result is rounded up -- otherwise the bonus would be invisible on exactly the early
+    /// items where the grind is worst.
+    /// </remarks>
+    [HarmonyPatch]
+    internal static class IntelligenceResearchPatch
+    {
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(DefaultSmithingModel),
+            nameof(DefaultSmithingModel.GetPartResearchGainForSmeltingItem))]
+        private static void FromSmelting(Hero hero, ref int __result) => Study(hero, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(DefaultSmithingModel),
+            nameof(DefaultSmithingModel.GetPartResearchGainForSmithingItem))]
+        private static void FromSmithing(Hero hero, ref int __result) => Study(hero, ref __result);
+
+        private static void Study(Hero hero, ref int result)
+        {
+            Guard.Touch("SmithingResearch");
+
+            try
+            {
+                if (result <= 0 || !AttributeBonus.Active()) return;
+
+                var intelligence = AttributeBonus.Of(hero, DefaultCharacterAttributes.Intelligence);
+                if (intelligence <= 0) return;
+
+                var raised = result * (1f + AttributeBonus.IntelligenceResearch * intelligence);
+                result = Math.Max(result, (int)Math.Ceiling(raised));
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("SmithingResearch", exception);
             }
         }
     }
