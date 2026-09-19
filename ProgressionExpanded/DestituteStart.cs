@@ -128,54 +128,55 @@ namespace ProgressionExpanded
             dataStore.SyncData("ProgressionExpanded_KitGiven", ref _kitGiven);
         }
 
-        /// <summary>Whether the hideout has already paid its one-off kit.</summary>
+        /// <summary>Whether the first battle spoils have already been swapped for the kit.</summary>
         private bool _kitGiven;
 
+        /// <summary>Whether a fight's spoils should still be swapped for the kit.</summary>
+        internal bool WantsTheKitTaken => !_kitGiven && Mod.On
+                                          && (Settings.Instance?.StartWithNothing ?? false);
+
         /// <summary>
-        /// Replaces a hideout's spoils with a knife and a pair of boots, once per campaign.
+        /// Takes back what a fight just paid into the packs and leaves the kit instead.
         /// </summary>
         /// <remarks>
-        /// This is the reward that kept arriving as a full set. It is not a quest reward at all -
-        /// no quest in the game hands items to the player - it is the loot from the hideout
-        /// battle at the end of the stealth mission in Tevea, handed over by
-        /// HideoutCampaignBehavior.OnCollectLootItems.
-        ///
-        /// Emptying the roster it was given is enough. Whatever is in that roster is what reaches
-        /// the player, with or without a screen to show it - the tutorial hideout hands its
-        /// spoils straight into the packs - so putting the kit into the same roster means the kit
-        /// is what arrives, by the same route the set did.
+        /// The first won fight of a campaign is the hideout at the end of the mission in Tevea,
+        /// and its spoils are the full set of gear that this setting exists to prevent. Once done,
+        /// every later fight pays normally.
         /// </remarks>
-        internal void TakeTheHideoutsSpoils(PartyBase? winner, ItemRoster? loot)
+        internal void SwapTheSpoils(Dictionary<string, int> before)
         {
-            // Says why it passed, once. The first version of this returned in silence on a
-            // condition it never named, and the log could only show that the site was reached.
-            if (!Mod.On || !(Settings.Instance?.StartWithNothing ?? false)) return;
+            if (!WantsTheKitTaken) return;
 
-            if (_kitGiven) return;
-
-            if (winner != PartyBase.MainParty || loot == null)
-            {
-                Log.Write($"Burlap sack: loot passed over - winner {winner?.Name?.ToString() ?? "null"}, "
-                          + $"{(loot == null ? "no roster" : loot.Count + " stacks")}");
-                return;
-            }
-
-            if (loot.Count == 0) return;
+            var roster = MobileParty.MainParty?.ItemRoster;
+            if (roster == null) return;
 
             var taken = new List<string>();
-            foreach (var element in loot)
-                if (element.EquipmentElement.Item != null)
-                    taken.Add(element.EquipmentElement.Item.StringId + " x" + element.Amount);
+            var found = new List<ItemRosterElement>();
+            foreach (var element in roster) found.Add(element);
 
-            loot.Clear();
+            foreach (var element in found)
+            {
+                var item = element.EquipmentElement.Item;
+                if (item == null || item.StringId == Grain) continue;
+
+                before.TryGetValue(item.StringId, out var had);
+                var gained = element.Amount - had;
+                if (gained <= 0) continue;
+
+                roster.AddToCounts(element.EquipmentElement, -gained);
+                taken.Add(item.StringId + " x" + gained);
+            }
+
+            if (taken.Count == 0) return;
+
             _kitGiven = true;
 
             var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
             var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
-            if (knife != null) loot.AddToCounts(knife, 1);
-            if (shoes != null) loot.AddToCounts(shoes, 1);
+            if (knife != null) roster.AddToCounts(knife, 1);
+            if (shoes != null) roster.AddToCounts(shoes, 1);
 
-            Log.Write("Burlap sack: hideout spoils were " + string.Join(", ", taken.ToArray())
+            Log.Write("Burlap sack: the spoils were " + string.Join(", ", taken.ToArray())
                       + $"; left {knife?.StringId} (tier {knife?.Tier}) and {shoes?.StringId} (tier {shoes?.Tier})");
         }
 
@@ -531,45 +532,71 @@ namespace ProgressionExpanded
 
 
     /// <summary>
-    /// Trims what a cleared hideout gives up, the one place the full set was coming from.
+    /// Watches a battle's loot land in the packs, and swaps the first lot for the kit.
     /// </summary>
+    /// <remarks>
+    /// Hooked on the loot operation rather than on the event it raises, because the event is
+    /// raised at the very end of that operation - the items are already in the player's packs by
+    /// the time any listener sees it, so emptying the roster handed to a listener does nothing.
+    /// That is why patching the two OnCollectLootItems handlers reached the site and changed
+    /// nothing: one of them only deals with plundered gold, and the other runs too late.
+    ///
+    /// Measuring the packs either side of the whole operation cannot be fooled by which internal
+    /// route the items take. Whatever appeared, appeared because of this fight.
+    /// </remarks>
     [HarmonyPatch]
-    internal static class HideoutLootPatch
+    internal static class BattleLootPatch
     {
-        /// <summary>
-        /// Both collectors, because a hideout fires both.
-        /// </summary>
-        /// <remarks>
-        /// The hideout behaviour adds its own share, and the battle behaviour adds the spoils of
-        /// the fight itself. Patching only the first saw the call happen and find nothing worth
-        /// taking, which is exactly what the log showed: the site was reached and then passed over
-        /// in silence.
-        /// </remarks>
-        private static IEnumerable<MethodBase> TargetMethods()
+        private static readonly Dictionary<string, int> Before = new Dictionary<string, int>();
+        private static bool _watching;
+
+        private static bool Prepare() => Target() != null;
+
+        private static MethodBase? Target() =>
+            AccessTools.Method(AccessTools.TypeByName("TaleWorlds.CampaignSystem.MapEvent"),
+                "LootDefeatedPartyItems");
+
+        private static MethodBase TargetMethod() => Target()!;
+
+        [HarmonyPrefix]
+        private static void Remember()
         {
-            foreach (var name in new[]
-                     {
-                         "TaleWorlds.CampaignSystem.CampaignBehaviors.HideoutCampaignBehavior",
-                         "TaleWorlds.CampaignSystem.CampaignBehaviors.BattleCampaignBehavior",
-                     })
+            Guard.Touch("BattleLootWatch");
+            _watching = false;
+
+            try
             {
-                var method = AccessTools.Method(AccessTools.TypeByName(name), "OnCollectLootItems");
-                if (method != null) yield return method;
+                if (DestituteStartBehavior.Current?.WantsTheKitTaken != true) return;
+
+                var roster = MobileParty.MainParty?.ItemRoster;
+                if (roster == null) return;
+
+                Before.Clear();
+                foreach (var element in roster)
+                    if (element.EquipmentElement.Item != null)
+                        Before[element.EquipmentElement.Item.StringId] = element.Amount;
+
+                _watching = true;
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("BattleLootWatch", exception);
             }
         }
 
         [HarmonyPostfix]
-        private static void Trim(PartyBase winnerParty, ItemRoster gainedLoots)
+        private static void Swap()
         {
-            Guard.Touch("HideoutLoot");
-
             try
             {
-                DestituteStartBehavior.Current?.TakeTheHideoutsSpoils(winnerParty, gainedLoots);
+                if (!_watching) return;
+                _watching = false;
+
+                DestituteStartBehavior.Current?.SwapTheSpoils(Before);
             }
             catch (Exception exception)
             {
-                Guard.Report("HideoutLoot", exception);
+                Guard.Report("BattleLoot", exception);
             }
         }
     }
