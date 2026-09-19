@@ -52,6 +52,7 @@ namespace ProgressionExpanded
         internal const float BaseKnockBackResistance = 0.15f;
         internal const float CunningBattleLoot = 0.02f;    // share of battle loot
         internal const float CunningCheatDeath = 0.01f;    // share of lethal blows survived
+        internal const float CunningCrimeDecay = 0.01f;    // how fast a crime rating fades
         internal const int SocialPointsPerCompanion = 5;   // one companion per five points
         internal const float IntelligenceLearning = 0.01f; // learning rate, every skill
         internal const float IntelligenceCeiling = 1f;     // learning limit, every skill
@@ -433,6 +434,45 @@ namespace ProgressionExpanded
                 // Never throw mid-blow.
             }
         }
+    }
+
+    /// <summary>
+    /// Cunning is not being the one they remember.
+    /// </summary>
+    /// <remarks>
+    /// Crime rating drifts down on its own -- five a day against a faction you are not currently
+    /// robbing -- and climbs while you hold alleys or raid. Cunning makes the drift steeper by 1%
+    /// a point, so a reputation earned in a bad week costs fewer good ones to shed.
+    ///
+    /// Only when the day's net change is already negative. Scaling it whichever way it pointed
+    /// would have made a rising rating rise faster, which is the opposite bonus.
+    ///
+    /// Player only by construction: crime rating is a thing factions hold against the main hero,
+    /// and there is no other hero to read here.
+    /// </remarks>
+    [HarmonyPatch(typeof(DefaultCrimeModel), nameof(DefaultCrimeModel.GetDailyCrimeRatingChange))]
+    internal static class CunningCrimePatch
+    {
+        [HarmonyPostfix]
+        private static void Forget(ref ExplainedNumber __result)
+        {
+            Guard.Touch("CrimeRating");
+
+            try
+            {
+                if (!AttributeBonus.Active() || __result.ResultNumber >= 0f) return;
+
+                var cunning = AttributeBonus.Of(Hero.MainHero, DefaultCharacterAttributes.Cunning);
+                if (cunning > 0)
+                    __result.AddFactor(AttributeBonus.CunningCrimeDecay * cunning, CunningText);
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("CrimeRating", exception);
+            }
+        }
+
+        private static readonly TextObject CunningText = new TextObject("{=MCcun}Cunning");
     }
 
     /// <summary>
