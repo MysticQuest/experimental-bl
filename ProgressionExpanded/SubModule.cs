@@ -142,7 +142,8 @@ namespace ProgressionExpanded
             // Hit points belong here too. It is not a mission patch by name, but it is the one
             // thing left that an agent reads while it is being built -- and it returns a struct
             // by ref, which is the shape most likely to be mis-wrapped.
-            "VigorHitPointsPatch", "AttributeCardPatch", "CharacterCreationAttributeCardPatch"
+            "VigorHitPointsPatch", "AttributeCardPatch", "CharacterCreationAttributeCardPatch",
+            "ControlStaggerPatch"
         };
 
         private static void ApplyPatches(Harmony harmony)
