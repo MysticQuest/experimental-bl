@@ -46,18 +46,25 @@ namespace ProgressionExpanded
 
             private bool Whole => _pointsPerUnit > 0;
 
-            /// <summary>What the attribute is worth at this value, with the rate behind it.</summary>
+            /// <summary>
+            /// What the attribute is worth at this value, with the rate behind it.
+            /// </summary>
+            /// <remarks>
+            /// Kept to one printed line each. The card draws this block below the bound-skill
+            /// icons but sizes it from the middle, so a line that wraps grows the block upward
+            /// and over the icon captions -- which is exactly what a sentence like "faster
+            /// recovery after a block, and longer for whoever you blocked" did. Names are short
+            /// enough to survive that, and the rate is abbreviated rather than spelled out.
+            /// </remarks>
             internal string At(int value) => $"+{Amount(_perPoint * value, Whole)} {_name} ({Rate})";
 
             /// <summary>What a point is worth, for a card with no value to show yet.</summary>
-            internal string PerPoint => Whole
-                ? $"+1 {_name} per {_pointsPerUnit} points"
-                : $"+{Amount(_perPoint, false)} {_name} per point";
+            internal string PerPoint => $"{_name} {Rate}";
 
             /// <summary>The rate alone, as it reads in brackets behind a total.</summary>
             private string Rate => Whole
-                ? $"1 per {_pointsPerUnit} points"
-                : $"+{Amount(_perPoint, false)} per point";
+                ? $"1 per {_pointsPerUnit} pts"
+                : $"+{Amount(_perPoint, false)}/pt";
 
             /// <remarks>
             /// The rounding belongs to the total and not to the rate, which is why only the total
@@ -81,19 +88,17 @@ namespace ProgressionExpanded
                 return new[]
                 {
                     new Effect("hit points", AttributeBonus.VigorHitPoints),
-                    new Effect("swing carried through a hit", AttributeBonus.VigorMomentum, percent: true),
-                    new Effect("chance to knock a man back", AttributeBonus.VigorKnockback, percent: true),
+                    new Effect("swing momentum", AttributeBonus.VigorMomentum, percent: true),
+                    new Effect("knockback", AttributeBonus.VigorKnockback, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Control)
                 return new[]
                 {
-                    new Effect("weapon handling", AttributeBonus.ControlHandling, percent: true),
+                    new Effect("handling", AttributeBonus.ControlHandling, percent: true),
                     new Effect("stagger resistance", AttributeBonus.ControlStagger, percent: true),
-                    new Effect("faster recovery after a block, and longer for whoever you blocked",
-                        AttributeBonus.ControlGuard, percent: true),
-                    new Effect("resistance to being knocked back, knocked down or dismounted",
-                        AttributeBonus.ControlFooting, percent: true),
+                    new Effect("block recovery", AttributeBonus.ControlGuard, percent: true),
+                    new Effect("footing", AttributeBonus.ControlFooting, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Endurance)
@@ -116,15 +121,14 @@ namespace ProgressionExpanded
                 {
                     new Effect("companion limit", 1f / AttributeBonus.SocialPointsPerCompanion,
                         pointsPerUnit: AttributeBonus.SocialPointsPerCompanion),
-                    new Effect("skill XP for the rest of your clan", AttributeBonus.SocialClanLearning,
-                        percent: true),
+                    new Effect("clan skill XP", AttributeBonus.SocialClanLearning, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Intelligence)
                 return new[]
                 {
-                    new Effect("learning rate on every skill", AttributeBonus.IntelligenceLearning, percent: true),
-                    new Effect("learning limit on every skill", AttributeBonus.IntelligenceCeiling),
+                    new Effect("learning rate, all skills", AttributeBonus.IntelligenceLearning, percent: true),
+                    new Effect("learning limit, all skills", AttributeBonus.IntelligenceCeiling),
                 };
 
             return None;
