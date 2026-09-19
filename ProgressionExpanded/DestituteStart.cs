@@ -36,10 +36,54 @@ namespace ProgressionExpanded
         /// <summary>The one thing kept back, so the first days are hard rather than fatal.</summary>
         private const string Grain = "grain";
 
-        public override void RegisterEvents() =>
-            CampaignEvents.OnNewGameCreatedPartialFollowUpEndEvent.AddNonSerializedListener(this, Strip);
+        /// <summary>
+        /// Set when a new campaign strips, cleared by the sweep that follows it an hour later.
+        /// </summary>
+        /// <remarks>
+        /// The belt to the braces. New-game creation is where the purse and the food arrive, but
+        /// the opening is scripted for a while yet - the brother, the clan, the banner - and a
+        /// handout hiding in any of those would land after the strip and never be seen again.
+        /// One tick later, the game has finished handing out and the player has done nothing to
+        /// earn anything, so whatever is there was given rather than gained.
+        ///
+        /// Saved, so it means "this campaign stripped and has not been swept". A campaign that
+        /// predates the feature has it false and is never touched, which is the whole point.
+        /// </remarks>
+        private bool _sweepPending;
 
-        public override void SyncData(IDataStore dataStore) { }
+        public override void RegisterEvents()
+        {
+            CampaignEvents.OnNewGameCreatedPartialFollowUpEndEvent.AddNonSerializedListener(this, Strip);
+            CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, Sweep);
+        }
+
+        public override void SyncData(IDataStore dataStore) =>
+            dataStore.SyncData("ProgressionExpanded_SweepPending", ref _sweepPending);
+
+        private void Sweep()
+        {
+            if (!_sweepPending) return;
+            _sweepPending = false;
+
+            try
+            {
+                var hero = Hero.MainHero;
+                if (hero == null || !Mod.On) return;
+
+                var settings = Settings.Instance;
+                if (settings == null || !settings.StartWithNothing) return;
+
+                var taken = hero.Gold;
+                if (taken > 0) hero.ChangeHeroGold(-taken);
+                SweepInventory();
+
+                if (taken > 0) Log.Write($"Burlap sack: {taken} gold arrived after the strip and was taken too");
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("BurlapSweep", exception);
+            }
+        }
 
         private void Strip(CampaignGameStarter starter)
         {
@@ -66,19 +110,9 @@ namespace ProgressionExpanded
                 if (hero.Gold > 0) hero.ChangeHeroGold(-hero.Gold);
 
                 // Last, so anything the equipment changes handed back is swept with the rest.
-                // The grain stays: two days of food is the difference between a hard start and a
-                // character who is already starving before the first town.
-                var roster = MobileParty.MainParty?.ItemRoster;
-                if (roster != null)
-                {
-                    var doomed = new List<ItemRosterElement>();
-                    foreach (var element in roster)
-                        if (element.EquipmentElement.Item?.StringId != Grain) doomed.Add(element);
+                SweepInventory();
 
-                    foreach (var element in doomed)
-                        roster.AddToCounts(element.EquipmentElement, -element.Amount);
-                }
-
+                _sweepPending = true;
                 Log.Write("Burlap sack: stripped all three equipment sets, gold and inventory");
 
                 var message = new TextObject("{=MCpoor}A burlap sack and a handful of stones. Everything else is gone.");
@@ -88,6 +122,26 @@ namespace ProgressionExpanded
             {
                 Guard.Report("StartWithNothing", exception);
             }
+        }
+
+        /// <summary>
+        /// Empties the packs, keeping the grain.
+        /// </summary>
+        /// <remarks>
+        /// Two days of food is the difference between a hard start and a character who is already
+        /// starving before they reach the first town, which is punishing rather than lean.
+        /// </remarks>
+        private static void SweepInventory()
+        {
+            var roster = MobileParty.MainParty?.ItemRoster;
+            if (roster == null) return;
+
+            var doomed = new List<ItemRosterElement>();
+            foreach (var element in roster)
+                if (element.EquipmentElement.Item?.StringId != Grain) doomed.Add(element);
+
+            foreach (var element in doomed)
+                roster.AddToCounts(element.EquipmentElement, -element.Amount);
         }
 
         /// <summary>Empties every slot, then puts back the one thing decency requires.</summary>
