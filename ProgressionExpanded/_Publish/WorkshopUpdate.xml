@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Every upload after the first. Put the id from the Workshop URL into ItemId once,
+  then the only thing that changes between releases is ChangeNotes.
+
+  Bump <Version> in _Module/SubModule.xml before each upload: the Workshop will not
+  do it for you, and it is the number people quote when they report a problem.
+-->
+<Tasks>
+    <GetItem>
+        <ItemId Value="0000000000"/>
+    </GetItem>
+    <UpdateItem>
+        <ModuleFolder Value="X:\Repositories\Mods\publish\Modules\ProgressionExpanded"/>
+        <ChangeNotes Value="Attribute cards now show what each point buys, on the character screen and during character creation."/>
+        <Tags>
+            <Tag Value="Utility" />
+            <Tag Value="Native" />
+            <Tag Value="Singleplayer" />
+            <Tag Value="v1.4.8" />
+        </Tags>
+    </UpdateItem>
+</Tasks>

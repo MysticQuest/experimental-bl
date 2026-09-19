@@ -10,3 +10,5 @@ obj/
 *.exe
 !**/_Module/**
 Directory.Build.props.user
+
+publish/

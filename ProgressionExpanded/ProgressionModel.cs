@@ -99,7 +99,7 @@ namespace ProgressionExpanded
 
                 if (intelligence > 0f)
                 {
-                    var boost = AttributeBonus.IntelligenceLearning * intelligence;
+                    var boost = AttributeBonus.Rate(AttributeBonus.IntelligenceLearning) * intelligence;
                     result.AddFactor(boost * (1f + result.SumOfFactors),
                                      includeDescriptions ? IntelligenceText : null);
                 }
@@ -123,7 +123,7 @@ namespace ProgressionExpanded
             if (attributes == null || !AttributeBonus.Active()) return 0f;
 
             var intelligence = attributes.GetPropertyValue(DefaultCharacterAttributes.Intelligence);
-            return intelligence <= 0f ? 0f : AttributeBonus.IntelligenceCeiling * intelligence;
+            return intelligence <= 0f ? 0f : AttributeBonus.Rate(AttributeBonus.IntelligenceCeiling) * intelligence;
         }
 
         private static float AverageAttribute(IReadOnlyPropertyOwner<CharacterAttribute> attributes, SkillObject skill)
