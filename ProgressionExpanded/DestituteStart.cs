@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.Core;
@@ -16,9 +17,10 @@ namespace ProgressionExpanded
     /// more than it sounds: vanilla opens with a horse, a decent weapon and a few hundred denars,
     /// which is most of the early game already solved.
     ///
-    /// Hooked on character creation being over rather than on the campaign starting, because the
-    /// backstory choices hand out their gear and gold during creation, and anything stripped
-    /// before that is simply given back afterwards.
+    /// Hooked on the last stage of new-game creation, which is later than it sounds it needs to
+    /// be. Character creation being "over" is not the end of the handouts: the starting purse and
+    /// the first few days of food arrive after it, so stripping there left a thousand denars and
+    /// a couple of grain behind. This fires once everything has been given out.
     ///
     /// New campaigns only. There is no way to un-start a campaign that has already run, and
     /// stripping a going concern on load would be a different and much crueller feature.
@@ -31,12 +33,15 @@ namespace ProgressionExpanded
         /// <summary>Worth two denars, and technically a ranged weapon.</summary>
         private const string Pebbles = "throwing_stone";
 
+        /// <summary>The one thing kept back, so the first days are hard rather than fatal.</summary>
+        private const string Grain = "grain";
+
         public override void RegisterEvents() =>
-            CampaignEvents.OnCharacterCreationIsOverEvent.AddNonSerializedListener(this, Strip);
+            CampaignEvents.OnNewGameCreatedPartialFollowUpEndEvent.AddNonSerializedListener(this, Strip);
 
         public override void SyncData(IDataStore dataStore) { }
 
-        private void Strip()
+        private void Strip(CampaignGameStarter starter)
         {
             Guard.Touch("StartWithNothing");
 
@@ -60,13 +65,18 @@ namespace ProgressionExpanded
 
                 if (hero.Gold > 0) hero.ChangeHeroGold(-hero.Gold);
 
-                var party = MobileParty.MainParty;
-                if (party != null)
+                // Last, so anything the equipment changes handed back is swept with the rest.
+                // The grain stays: two days of food is the difference between a hard start and a
+                // character who is already starving before the first town.
+                var roster = MobileParty.MainParty?.ItemRoster;
+                if (roster != null)
                 {
-                    // Last, so that anything the equipment changes handed back lands in here
-                    // before it is swept. Food included: starting with nothing means starting
-                    // hungry, and the first thing a player does is go and fix that.
-                    party.ItemRoster?.Clear();
+                    var doomed = new List<ItemRosterElement>();
+                    foreach (var element in roster)
+                        if (element.EquipmentElement.Item?.StringId != Grain) doomed.Add(element);
+
+                    foreach (var element in doomed)
+                        roster.AddToCounts(element.EquipmentElement, -element.Amount);
                 }
 
                 Log.Write("Burlap sack: stripped all three equipment sets, gold and inventory");
