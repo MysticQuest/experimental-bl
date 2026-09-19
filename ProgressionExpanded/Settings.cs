@@ -51,10 +51,15 @@ namespace ProgressionExpanded
 
             yield return new Preset(Id, "vanillaish", "Closer to vanilla", () => new Settings
             {
-                Level330 = 20,
-                CareerLength = 1f,
-                EarlySpeed = 1f,
-                SummitHarshness = 5f,
+                // Not guessed: these four are the closest fit to vanilla's own effort curve that
+                // the dials can reach. Searched over the whole grid against vanilla's cumulative
+                // XP for a 10-attribute, 5-focus character, they hold within 20% of it from skill
+                // 40 to 320. The values that were here before drifted to a seventh of vanilla's
+                // cost by 320, which is not what the name promises.
+                Level330 = 32,
+                CareerLength = 1.25f,
+                EarlySpeed = 5f,
+                SummitHarshness = 3f,
                 MaxFocusPerSkill = 5,
                 EscalatingFocusCost = false,
                 FocusPointsPerLevel = 1,
