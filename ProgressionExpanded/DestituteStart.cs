@@ -43,8 +43,9 @@ namespace ProgressionExpanded
         /// The belt to the braces. New-game creation is where the purse and the food arrive, but
         /// the opening is scripted for a while yet - the brother, the clan, the banner - and a
         /// handout hiding in any of those would land after the strip and never be seen again.
-        /// One tick later, the game has finished handing out and the player has done nothing to
-        /// earn anything, so whatever is there was given rather than gained.
+        /// So the window runs on the real-time tick instead: anything handed over goes back on
+        /// the floor the same second it appears, which is the moment the world map comes up. The
+        /// window closes at the first hourly tick, by which point the player could be earning.
         ///
         /// Saved, so it means "this campaign stripped and has not been swept". A campaign that
         /// predates the feature has it false and is never touched, which is the whole point.
@@ -54,16 +55,26 @@ namespace ProgressionExpanded
         public override void RegisterEvents()
         {
             CampaignEvents.OnNewGameCreatedPartialFollowUpEndEvent.AddNonSerializedListener(this, Strip);
-            CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, Sweep);
+            CampaignEvents.TickEvent.AddNonSerializedListener(this, OnTick);
+            CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, CloseWindow);
         }
 
         public override void SyncData(IDataStore dataStore) =>
             dataStore.SyncData("ProgressionExpanded_SweepPending", ref _sweepPending);
 
+        /// <summary>Real time, so anything handed over lands back on the floor the same second.</summary>
+        private void OnTick(float dt) => Sweep();
+
+        /// <summary>An hour in, the scripted opening is done and the window closes for good.</summary>
+        private void CloseWindow()
+        {
+            Sweep();
+            _sweepPending = false;
+        }
+
         private void Sweep()
         {
             if (!_sweepPending) return;
-            _sweepPending = false;
 
             try
             {
@@ -74,6 +85,8 @@ namespace ProgressionExpanded
                 if (settings == null || !settings.StartWithNothing) return;
 
                 var taken = hero.Gold;
+                if (taken <= 0 && !HasLoot()) return;
+
                 if (taken > 0) hero.ChangeHeroGold(-taken);
                 SweepInventory();
 
@@ -122,6 +135,18 @@ namespace ProgressionExpanded
             {
                 Guard.Report("StartWithNothing", exception);
             }
+        }
+
+        /// <summary>Whether the packs hold anything but the grain.</summary>
+        private static bool HasLoot()
+        {
+            var roster = MobileParty.MainParty?.ItemRoster;
+            if (roster == null) return false;
+
+            foreach (var element in roster)
+                if (element.EquipmentElement.Item?.StringId != Grain) return true;
+
+            return false;
         }
 
         /// <summary>
