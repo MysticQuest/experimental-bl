@@ -90,6 +90,10 @@ namespace ProgressionExpanded
                 {
                     new Effect("weapon handling", AttributeBonus.ControlHandling, percent: true),
                     new Effect("stagger resistance", AttributeBonus.ControlStagger, percent: true),
+                    new Effect("faster recovery after a block, and longer for whoever you blocked",
+                        AttributeBonus.ControlGuard, percent: true),
+                    new Effect("resistance to being knocked back, knocked down or dismounted",
+                        AttributeBonus.ControlFooting, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Endurance)
