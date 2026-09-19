@@ -176,6 +176,8 @@ namespace ProgressionExpanded
                                        SkillObject skill, float atCap, EffectIncrementType increment,
                                        PartyRole role = PartyRole.Personal)
         {
+            atCap *= Settings.Instance?.SkillStrength ?? 1f;
+
             var effect = new SkillEffect(id);
             effect.Initialize(new TextObject(description), skill, role,
                               atCap / Curve.SkillCap, increment, 0f, float.MinValue, float.MaxValue);

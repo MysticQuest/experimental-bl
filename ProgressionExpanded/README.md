@@ -1,4 +1,4 @@
-# Mastery Curve
+# Progression Expanded
 
 A progression rebuild for Bannerlord v1.4.8, aimed at a career that reads like a life: no free
 levels for stabbing five men, a long honest middle, and a summit only total dedication reaches.
@@ -66,7 +66,7 @@ against a future game version the curve still works and only the pips revert.
 
 ## Settings
 
-In **Mod Options → Mastery Curve**. Everything is phrased as something you can notice while playing
+In **Mod Options → Progression Expanded**. Everything is phrased as something you can notice while playing
 — which character level you master a skill at, how long a whole career runs, how fast skills rise
 early — rather than as the exponents underneath.
 

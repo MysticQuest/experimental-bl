@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using MCM.Abstractions;
 using MCM.Abstractions.Attributes;
 using MCM.Abstractions.Attributes.v2;
 using MCM.Abstractions.Base.Global;
+using MCM.Abstractions.Base;
 using MCM.Common;
 using TaleWorlds.CampaignSystem.CharacterDevelopment;
 using TaleWorlds.Core;
@@ -20,6 +22,65 @@ namespace ProgressionExpanded
         private const string Legacy = "Your children";
         private const string Trouble = "Troubleshooting";
         private const string DebugGroup = "Debug tools";
+
+        /// <summary>
+        /// The named starting points offered at the top of the settings page.
+        /// </summary>
+        /// <remarks>
+        /// Twenty-odd knobs with no guidance is a page most people close again. "Default" is the
+        /// tuning this mod is actually about; "Closer to vanilla" is for someone who wants the
+        /// bonuses without the pacing, and moves only the progression knobs -- shorter climb,
+        /// vanilla's five focus points at a flat price, and its steep wall at the top -- while
+        /// leaving both bonus groups switched on.
+        /// </remarks>
+        public override IEnumerable<ISettingsPreset> GetBuiltInPresets()
+        {
+            foreach (var preset in base.GetBuiltInPresets()) yield return preset;
+
+            yield return new Preset(Id, "vanillaish", "Closer to vanilla", () => new Settings
+            {
+                Level330 = 20,
+                CareerLength = 1f,
+                EarlySpeed = 1f,
+                SummitHarshness = 5f,
+                MaxFocusPerSkill = 5,
+                EscalatingFocusCost = false,
+                FocusPointsPerLevel = 1,
+                LevelsPerAttributePoint = 4,
+            });
+        }
+
+        /// <summary>
+        /// One named starting point, built from a whole settings object.
+        /// </summary>
+        /// <remarks>
+        /// MCM builds its own presets with a fluent builder that is internal to the assembly, so
+        /// the interface is implemented here instead. It is four members, and handing back a
+        /// fully-formed <see cref="Settings"/> is clearer than a list of property names and boxed
+        /// values anyway: anything the preset does not mention keeps its declared default, which
+        /// is what "closer to vanilla only moves the progression knobs" means in practice.
+        /// </remarks>
+        private sealed class Preset : ISettingsPreset
+        {
+            private readonly Func<Settings> _build;
+
+            internal Preset(string settingsId, string id, string name, Func<Settings> build)
+            {
+                SettingsId = settingsId;
+                Id = id;
+                Name = name;
+                _build = build;
+            }
+
+            public string SettingsId { get; }
+            public string Id { get; }
+            public string Name { get; }
+
+            public BaseSettings LoadPreset() => _build();
+
+            /// <summary>These are fixed, so there is nothing to save over them.</summary>
+            public bool SavePreset(BaseSettings settings) => false;
+        }
 
         public override string Id => "ProgressionExpanded_v1";
         public override string DisplayName => "Progression Expanded";
@@ -186,6 +247,12 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(Skills, GroupOrder = 3)]
         public bool SkillBonuses { get; set; } = true;
 
+        [SettingPropertyFloatingInteger("Global skill bonus strength", 0f, 2f, "0.00", Order = 1,
+            RequireRestart = true,
+            HintText = "Scales every skill bonus above at once. 1.00 is the tuning described here, 0.50 halves all of them, 2.00 doubles them. The character screen quotes the scaled figure, so what it says is what you get. Needs a campaign reload, because these are registered with the game once when a campaign starts.")]
+        [SettingPropertyGroup(Skills, GroupOrder = 3)]
+        public float SkillStrength { get; set; } = 1f;
+
 
         [SettingPropertyBool("Bandits may join you outright", Order = 1, RequireRestart = false,
             HintText = "At high Roguery a lone bandit party sometimes falls in behind you instead of fighting. Unlike everything else here this rewrites the encounter rather than adjusting a number, so it is off by default. Turn it off first if a campaign starts crashing.")]
@@ -195,9 +262,20 @@ namespace ProgressionExpanded
         // --- Attribute bonuses ---
 
         [SettingPropertyBool("Attribute bonuses", Order = 0, RequireRestart = false,
-            HintText = "Rewards for raising an attribute, on top of the learning rate and ceiling it already gives. Vigor and Endurance: hit points. Control: weapon handling and damage resistance. Endurance: mount speed, running speed and smithing stamina. Cunning: a chance a bandit party joins you instead of fighting. Social: companion limit. Intelligence: learning rate on every skill. They are listed on the attribute card when you open it, which needs Character screen changes on.")]
+            HintText = "Rewards for raising an attribute, on top of the learning rate and ceiling it already gives. Vigor: hit points, momentum carried through a hit, knocking enemies back, resistance to illness. Control: weapon handling, stagger resistance, recovery after blocking, and resistance to being knocked back, knocked down or dismounted. Endurance: damage resistance, mount speed, running speed, smithing stamina. Cunning: a larger share of battle loot, a chance to cheat death, and a crime rating that fades faster. Social: companion limit, skill XP for the rest of your clan, party morale. Intelligence: learning rate and learning limit on every skill, and faster smithing research. They are listed on the attribute card when you open it, which needs Character screen changes on.")]
         [SettingPropertyGroup(Attributes, GroupOrder = 4)]
         public bool AttributeBonuses { get; set; } = true;
+
+        [SettingPropertyFloatingInteger("Attribute bonus strength", 0f, 2f, "0.00", Order = 1,
+            RequireRestart = false,
+            HintText = "Scales every attribute bonus at once. 1.00 is the tuning described above, 0.50 halves all of them, 2.00 doubles them. The attribute card quotes the scaled figure, so what it says is what you get. Takes effect immediately.")]
+        [SettingPropertyGroup(Attributes, GroupOrder = 4)]
+        public float AttributeStrength { get; set; } = 1f;
+
+        [SettingPropertyBool("Other heroes get them too", Order = 2, RequireRestart = false,
+            HintText = "On, an attribute pays whoever owns it -- your companions, and every lord in Calradia, the same as you. Off, only your own character benefits. Three of them are yours either way and are unaffected by this: battle loot, cheating death and crime rating are read off your character by construction. Intelligence's learning rate and limit are likewise unaffected, because the game asks for them without saying which hero is asking.")]
+        [SettingPropertyGroup(Attributes, GroupOrder = 4)]
+        public bool BonusesForOthers { get; set; } = true;
 
         // --- Your children ---
 

@@ -66,12 +66,45 @@ namespace ProgressionExpanded
             return Mod.On && settings != null && settings.AttributeBonuses;
         }
 
+        /// <summary>
+        /// Every rate on this page, after the strength dial has had its say.
+        /// </summary>
+        /// <remarks>
+        /// One multiplier over the whole group, rather than a slider for each of the twenty-odd
+        /// bonuses. Without it the only answer to "this one is too strong" is turning the entire
+        /// group off, which throws away nineteen bonuses to fix one. Both the effect and the line
+        /// printed on the card read through here, so what the card promises is what the game does.
+        /// </remarks>
+        internal static float Rate(float perPoint) => perPoint * (Settings.Instance?.AttributeStrength ?? 1f);
+
+        /// <summary>Companions per point, which is the one rate the game states as its inverse.</summary>
+        internal static float CompanionsPerPoint => Rate(1f / SocialPointsPerCompanion);
+
+        /// <summary>
+        /// Whether a hero other than the player is entitled to these at all.
+        /// </summary>
+        /// <remarks>
+        /// Hit points, handling and the resistances have always applied to every hero; battle
+        /// loot, cheat death and crime rating never could, because they are read off the player
+        /// by construction. That split is defensible one bonus at a time and arbitrary as a set,
+        /// so the ones that can go either way are a setting rather than a judgement.
+        ///
+        /// Checked here, in the one place every per-hero bonus asks for an attribute value, so a
+        /// bonus cannot be added later and quietly miss the rule.
+        /// </remarks>
+        internal static bool AppliesTo(Hero? hero)
+        {
+            if (hero == null) return false;
+            if (Settings.Instance?.BonusesForOthers ?? true) return true;
+            return hero == Hero.MainHero;
+        }
+
         /// <summary>An attribute's value for a hero, or zero when there is no hero to ask.</summary>
         internal static int Of(Hero? hero, CharacterAttribute? attribute)
         {
             try
             {
-                if (hero == null || attribute == null) return 0;
+                if (hero == null || attribute == null || !AppliesTo(hero)) return 0;
                 return Math.Max(0, hero.GetAttributeValue(attribute));
             }
             catch
@@ -141,7 +174,7 @@ namespace ProgressionExpanded
 
                 var vigor = AttributeBonus.Of(hero, DefaultCharacterAttributes.Vigor);
                 if (vigor > 0)
-                    __result.Add(vigor * AttributeBonus.VigorHitPoints, new TextObject("{=MCvig}Vigor"));
+                    __result.Add(vigor * AttributeBonus.Rate(AttributeBonus.VigorHitPoints), new TextObject("{=MCvig}Vigor"));
         
                         }
             catch (Exception exception)
@@ -176,7 +209,7 @@ namespace ProgressionExpanded
                     var rider = AttributeBonus.HeroOf(agent.RiderAgent);
                     var endurance = AttributeBonus.Of(rider, DefaultCharacterAttributes.Endurance);
                     if (endurance > 0)
-                        agentDrivenProperties.MaxSpeedMultiplier *= 1f + AttributeBonus.EnduranceMountSpeed * endurance;
+                        agentDrivenProperties.MaxSpeedMultiplier *= 1f + AttributeBonus.Rate(AttributeBonus.EnduranceMountSpeed) * endurance;
                     return;
                 }
 
@@ -185,11 +218,11 @@ namespace ProgressionExpanded
 
                 var control = AttributeBonus.Of(hero, DefaultCharacterAttributes.Control);
                 if (control > 0)
-                    agentDrivenProperties.HandlingMultiplier *= 1f + AttributeBonus.ControlHandling * control;
+                    agentDrivenProperties.HandlingMultiplier *= 1f + AttributeBonus.Rate(AttributeBonus.ControlHandling) * control;
 
                 var onFoot = AttributeBonus.Of(hero, DefaultCharacterAttributes.Endurance);
                 if (onFoot > 0)
-                    agentDrivenProperties.MaxSpeedMultiplier *= 1f + AttributeBonus.EnduranceRunSpeed * onFoot;
+                    agentDrivenProperties.MaxSpeedMultiplier *= 1f + AttributeBonus.Rate(AttributeBonus.EnduranceRunSpeed) * onFoot;
             }
             catch
             {
@@ -224,7 +257,7 @@ namespace ProgressionExpanded
 
                 var hero = AttributeBonus.HeroOf(defenderAgent);
                 var control = AttributeBonus.Of(hero, DefaultCharacterAttributes.Control);
-                if (control > 0) __result *= 1f + AttributeBonus.ControlStagger * control;
+                if (control > 0) __result *= 1f + AttributeBonus.Rate(AttributeBonus.ControlStagger) * control;
             }
             catch
             {
@@ -274,7 +307,7 @@ namespace ProgressionExpanded
                 var endurance = AttributeBonus.Of(victim, DefaultCharacterAttributes.Endurance);
                 if (endurance <= 0) return;
 
-                __result *= Math.Max(Floor, 1f - AttributeBonus.EnduranceResistance * endurance);
+                __result *= Math.Max(Floor, 1f - AttributeBonus.Rate(AttributeBonus.EnduranceResistance) * endurance);
             }
             catch
             {
@@ -312,7 +345,7 @@ namespace ProgressionExpanded
                 var control = AttributeBonus.Of(AttributeBonus.HeroOf(defenderAgent), DefaultCharacterAttributes.Control);
                 if (control <= 0) return;
 
-                var share = AttributeBonus.ControlGuard * control;
+                var share = AttributeBonus.Rate(AttributeBonus.ControlGuard) * control;
                 defenderStunPeriod *= Math.Max(0.5f, 1f - share);
                 attackerStunPeriod *= 1f + share;
             }
@@ -361,7 +394,7 @@ namespace ProgressionExpanded
                 if (!AttributeBonus.Active() || agent == null || result <= 0f) return;
 
                 var control = AttributeBonus.Of(AttributeBonus.HeroOf(agent), DefaultCharacterAttributes.Control);
-                if (control > 0) result *= 1f + AttributeBonus.ControlFooting * control;
+                if (control > 0) result *= 1f + AttributeBonus.Rate(AttributeBonus.ControlFooting) * control;
             }
             catch
             {
@@ -392,7 +425,7 @@ namespace ProgressionExpanded
                 if (__result <= 0f || !AttributeBonus.Active() || attacker == null) return;
 
                 var vigor = AttributeBonus.Of(AttributeBonus.HeroOf(attacker), DefaultCharacterAttributes.Vigor);
-                if (vigor > 0) __result *= 1f + AttributeBonus.VigorMomentum * vigor;
+                if (vigor > 0) __result *= 1f + AttributeBonus.Rate(AttributeBonus.VigorMomentum) * vigor;
             }
             catch
             {
@@ -427,7 +460,7 @@ namespace ProgressionExpanded
 
                 var vigor = AttributeBonus.Of(AttributeBonus.HeroOf(attackerAgent), DefaultCharacterAttributes.Vigor);
                 if (vigor > 0)
-                    __result += AttributeBonus.VigorKnockback * vigor * AttributeBonus.BaseKnockBackResistance;
+                    __result += AttributeBonus.Rate(AttributeBonus.VigorKnockback) * vigor * AttributeBonus.BaseKnockBackResistance;
             }
             catch
             {
@@ -464,7 +497,7 @@ namespace ProgressionExpanded
 
                 var cunning = AttributeBonus.Of(Hero.MainHero, DefaultCharacterAttributes.Cunning);
                 if (cunning > 0)
-                    __result.AddFactor(AttributeBonus.CunningCrimeDecay * cunning, CunningText);
+                    __result.AddFactor(AttributeBonus.Rate(AttributeBonus.CunningCrimeDecay) * cunning, CunningText);
             }
             catch (Exception exception)
             {
@@ -500,7 +533,7 @@ namespace ProgressionExpanded
 
                 var social = AttributeBonus.Of(mobileParty.LeaderHero, DefaultCharacterAttributes.Social);
                 if (social > 0)
-                    __result.AddFactor(AttributeBonus.SocialMorale * social, SocialText);
+                    __result.AddFactor(AttributeBonus.Rate(AttributeBonus.SocialMorale) * social, SocialText);
             }
             catch (Exception exception)
             {
@@ -547,7 +580,7 @@ namespace ProgressionExpanded
                 var intelligence = AttributeBonus.Of(hero, DefaultCharacterAttributes.Intelligence);
                 if (intelligence <= 0) return;
 
-                var raised = result * (1f + AttributeBonus.IntelligenceResearch * intelligence);
+                var raised = result * (1f + AttributeBonus.Rate(AttributeBonus.IntelligenceResearch) * intelligence);
                 result = Math.Max(result, (int)Math.Ceiling(raised));
             }
             catch (Exception exception)
@@ -584,7 +617,7 @@ namespace ProgressionExpanded
                 if (__result <= 0f || !AttributeBonus.Active()) return;
 
                 var vigor = AttributeBonus.Of(__instance, DefaultCharacterAttributes.Vigor);
-                if (vigor > 0) __result *= Math.Max(0f, 1f - AttributeBonus.VigorIllness * vigor);
+                if (vigor > 0) __result *= Math.Max(0f, 1f - AttributeBonus.Rate(AttributeBonus.VigorIllness) * vigor);
             }
             catch
             {
@@ -623,7 +656,7 @@ namespace ProgressionExpanded
                 var cunning = AttributeBonus.Of(hero, DefaultCharacterAttributes.Cunning);
                 if (cunning <= 0) return;
 
-                var saved = AttributeBonus.CunningCheatDeath * cunning;
+                var saved = AttributeBonus.Rate(AttributeBonus.CunningCheatDeath) * cunning;
                 __result += (1f - __result) * Math.Min(1f, saved);
             }
             catch (Exception exception)
@@ -657,7 +690,7 @@ namespace ProgressionExpanded
                 var cunning = AttributeBonus.Of(Hero.MainHero, DefaultCharacterAttributes.Cunning);
                 if (cunning <= 0) return;
 
-                var share = AttributeBonus.CunningBattleLoot * cunning;
+                var share = AttributeBonus.Rate(AttributeBonus.CunningBattleLoot) * cunning;
                 var mine = PartyBase.MainParty;
 
                 for (var i = 0; i < __result.Count; i++)
@@ -688,7 +721,7 @@ namespace ProgressionExpanded
                 if (!AttributeBonus.Active()) return;
 
                 var endurance = AttributeBonus.Of(hero, DefaultCharacterAttributes.Endurance);
-                if (endurance > 0) __result += endurance * AttributeBonus.EnduranceStamina;
+                if (endurance > 0) __result += (int)Math.Round(endurance * AttributeBonus.Rate(AttributeBonus.EnduranceStamina));
         
                         }
             catch (Exception exception)
@@ -711,7 +744,7 @@ namespace ProgressionExpanded
                 if (!AttributeBonus.Active() || clan?.Leader == null) return;
 
                 var social = AttributeBonus.Of(clan.Leader, DefaultCharacterAttributes.Social);
-                if (social > 0) __result += social / AttributeBonus.SocialPointsPerCompanion;
+                if (social > 0) __result += (int)(social * AttributeBonus.CompanionsPerPoint);
         
                         }
             catch (Exception exception)

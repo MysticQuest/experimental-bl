@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  First upload only. This creates a brand new Workshop item every time it runs, so
+  once it has succeeded, switch to WorkshopUpdate.xml and put the new id in it.
+
+  The Workshop item's TITLE is not set here: it is taken from <Name> in the module's
+  SubModule.xml, which is "Progression Expanded".
+
+  ModuleFolder is the staging folder that publish.ps1 builds. Run the script rather
+  than pointing this at the live game folder, so what ships is only what was built.
+-->
+<Tasks>
+    <CreateItem/>
+    <UpdateItem>
+        <ModuleFolder Value="X:\Repositories\Mods\publish\Modules\ProgressionExpanded"/>
+        <ItemDescription Value="Progression for Bannerlord v1.4.8.&#10;&#10;[h2]The curve[/h2]&#10;Skill and character levels run on longer curves, so mastering a skill lands near the end of a career rather than a third of the way through. Focus goes further per skill and costs more the deeper it goes. Ceilings still emerge from the learning rate as in vanilla, nothing is clamped, and a skill past its ceiling slows rather than stops.&#10;&#10;[h2]Attributes[/h2]&#10;Each attribute now does something on its own, beyond the skills it governs. The character screen and character creation list what a point buys.&#10;&#10;[h2]Skill rewards[/h2]&#10;Some skills pay the character rather than the party, so mastering one is worth something in its own right.&#10;&#10;[h2]Also[/h2]&#10;Everything is configurable.&#10;&#10;[h2]Requires[/h2]&#10;Harmony, ButterLib, UIExtenderEx, Mod Configuration Menu v5.&#10;Do not run alongside another mod that replaces CharacterDevelopmentModel."/>
+        <Tags>
+            <Tag Value="Utility" />
+            <Tag Value="Native" />
+            <Tag Value="Singleplayer" />
+            <Tag Value="v1.4.8" />
+        </Tags>
+        <Image Value="X:\Repositories\Mods\ProgressionExpanded\_Publish\preview.png"/>
+        <Visibility Value="Private"/>
+    </UpdateItem>
+</Tasks>

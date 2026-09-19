@@ -94,57 +94,70 @@ namespace ProgressionExpanded
             if (attribute == DefaultCharacterAttributes.Vigor)
                 return new[]
                 {
-                    new Effect("hit points", AttributeBonus.VigorHitPoints),
-                    new Effect("swing momentum through enemies", AttributeBonus.VigorMomentum, percent: true),
-                    new Effect("chance to knock enemies back", AttributeBonus.VigorKnockback, percent: true),
-                    new Effect("resistance to illness", AttributeBonus.VigorIllness, percent: true),
+                    new Effect("hit points", AttributeBonus.Rate(AttributeBonus.VigorHitPoints)),
+                    new Effect("swing momentum through enemies", AttributeBonus.Rate(AttributeBonus.VigorMomentum), percent: true),
+                    new Effect("chance to knock enemies back", AttributeBonus.Rate(AttributeBonus.VigorKnockback), percent: true),
+                    new Effect("resistance to illness", AttributeBonus.Rate(AttributeBonus.VigorIllness), percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Control)
                 return new[]
                 {
-                    new Effect("weapon handling", AttributeBonus.ControlHandling, percent: true),
-                    new Effect("stagger resistance", AttributeBonus.ControlStagger, percent: true),
-                    new Effect("faster recovery after blocking", AttributeBonus.ControlGuard, percent: true),
-                    new Effect("resistance to knocks and dismounts", AttributeBonus.ControlFooting, percent: true),
+                    new Effect("weapon handling", AttributeBonus.Rate(AttributeBonus.ControlHandling), percent: true),
+                    new Effect("stagger resistance", AttributeBonus.Rate(AttributeBonus.ControlStagger), percent: true),
+                    new Effect("faster recovery after blocking", AttributeBonus.Rate(AttributeBonus.ControlGuard), percent: true),
+                    new Effect("resistance to knocks and dismounts", AttributeBonus.Rate(AttributeBonus.ControlFooting), percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Endurance)
                 return new[]
                 {
-                    new Effect("damage resistance", AttributeBonus.EnduranceResistance, percent: true),
-                    new Effect("mount speed", AttributeBonus.EnduranceMountSpeed, percent: true),
-                    new Effect("running speed", AttributeBonus.EnduranceRunSpeed, percent: true),
-                    new Effect("smithing stamina", AttributeBonus.EnduranceStamina),
+                    new Effect("damage resistance", AttributeBonus.Rate(AttributeBonus.EnduranceResistance), percent: true),
+                    new Effect("mount speed", AttributeBonus.Rate(AttributeBonus.EnduranceMountSpeed), percent: true),
+                    new Effect("running speed", AttributeBonus.Rate(AttributeBonus.EnduranceRunSpeed), percent: true),
+                    new Effect("smithing stamina", AttributeBonus.Rate(AttributeBonus.EnduranceStamina)),
                 };
 
             if (attribute == DefaultCharacterAttributes.Cunning)
                 return new[]
                 {
-                    new Effect("share of battle loot", AttributeBonus.CunningBattleLoot, percent: true),
-                    new Effect("chance to cheat death", AttributeBonus.CunningCheatDeath, percent: true),
-                    new Effect("faster crime rating decay", AttributeBonus.CunningCrimeDecay, percent: true),
+                    new Effect("share of battle loot", AttributeBonus.Rate(AttributeBonus.CunningBattleLoot), percent: true),
+                    new Effect("chance to cheat death", AttributeBonus.Rate(AttributeBonus.CunningCheatDeath), percent: true),
+                    new Effect("faster crime rating decay", AttributeBonus.Rate(AttributeBonus.CunningCrimeDecay), percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Social)
                 return new[]
                 {
-                    new Effect("companion limit", 1f / AttributeBonus.SocialPointsPerCompanion,
-                        pointsPerUnit: AttributeBonus.SocialPointsPerCompanion),
-                    new Effect("skill XP for the rest of your clan", AttributeBonus.SocialClanLearning,
+                    new Effect("companion limit", AttributeBonus.CompanionsPerPoint,
+                        pointsPerUnit: PointsPerCompanion()),
+                    new Effect("skill XP for the rest of your clan", AttributeBonus.Rate(AttributeBonus.SocialClanLearning),
                         percent: true),
-                    new Effect("party morale", AttributeBonus.SocialMorale, percent: true),
+                    new Effect("party morale", AttributeBonus.Rate(AttributeBonus.SocialMorale), percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Intelligence)
                 return new[]
                 {
-                    new Effect("learning rate on every skill", AttributeBonus.IntelligenceLearning, percent: true),
-                    new Effect("learning limit on every skill", AttributeBonus.IntelligenceCeiling),
-                    new Effect("smithing research", AttributeBonus.IntelligenceResearch, percent: true),
+                    new Effect("learning rate on every skill", AttributeBonus.Rate(AttributeBonus.IntelligenceLearning), percent: true),
+                    new Effect("learning limit on every skill", AttributeBonus.Rate(AttributeBonus.IntelligenceCeiling)),
+                    new Effect("smithing research", AttributeBonus.Rate(AttributeBonus.IntelligenceResearch), percent: true),
                 };
 
             return None;
+        }
+
+        /// <summary>
+        /// How many points one companion costs, once the strength dial has moved the rate.
+        /// </summary>
+        /// <remarks>
+        /// Companions are the one bonus the game states as an interval rather than a rate, so the
+        /// interval has to be recovered from the scaled rate instead of quoted from the constant.
+        /// </remarks>
+        private static int PointsPerCompanion()
+        {
+            var rate = AttributeBonus.CompanionsPerPoint;
+            return rate <= 0f ? AttributeBonus.SocialPointsPerCompanion : Math.Max(1, (int)Math.Round(1f / rate));
         }
 
         /// <summary>The attribute's lines at a value, or its rates when nothing has been spent yet.</summary>
