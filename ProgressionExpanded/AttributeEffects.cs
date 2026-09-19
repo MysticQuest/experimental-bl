@@ -57,7 +57,7 @@ namespace ProgressionExpanded
             ///
             /// The budget is roughly fifty characters for the whole line, which is a good deal
             /// more than one word. Names are written to be understood by someone who has never
-            /// read the settings -- "resistance to knockback and dismount", not "footing" -- and
+            /// read the settings -- "knockback, knockdown and dismount resistance", not "footing" -- and
             /// only the rate is abbreviated, because the bracket repeats on every line and its
             /// meaning is obvious from the total in front of it.
             /// </remarks>
