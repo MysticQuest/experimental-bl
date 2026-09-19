@@ -24,6 +24,34 @@ namespace ProgressionExpanded
     {
         internal static readonly Action Finish = Run;
         internal static readonly Action Leave = EndActiveMission;
+        internal static readonly Action Win = WinActiveMission;
+
+        /// <summary>
+        /// Routs whoever is fighting you, so the mission ends the way winning it ends.
+        /// </summary>
+        /// <remarks>
+        /// Leaving a mission and winning one are different endings, and only the second pays: the
+        /// hideout hands its spoils over on a victory. This drives the game's own
+        /// MakeEnemiesFleeCheat rather than ending the mission directly, so the battle resolves
+        /// through its normal victory path and everything waiting on that still runs, loot
+        /// included.
+        /// </remarks>
+        private static void WinActiveMission()
+        {
+            try
+            {
+                if (Mission.Current == null) { Say("No mission is running."); return; }
+
+                Log.Write("Debug: routing the enemy from the settings screen");
+                Mission.MakeEnemiesFleeCheat(new System.Collections.Generic.List<string>());
+                Say("The enemy is routed. The mission should end on its own.");
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("WinMission", exception);
+                Say("Could not rout the enemy; see the mod log.");
+            }
+        }
 
         /// <summary>
         /// Ends whatever scene is running and puts the player back on the world map.
