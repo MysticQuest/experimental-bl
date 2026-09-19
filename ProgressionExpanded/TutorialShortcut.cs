@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.MountAndBlade;
 using HarmonyLib;
 using TaleWorlds.Library;
 
@@ -23,50 +23,35 @@ namespace ProgressionExpanded
     internal static class TutorialShortcut
     {
         internal static readonly Action Finish = Run;
-        internal static readonly Action Succeed = CompleteQuests;
+        internal static readonly Action Leave = EndActiveMission;
 
         /// <summary>
-        /// Completes every quest the player currently holds, successfully.
+        /// Ends whatever scene is running and puts the player back on the world map.
         /// </summary>
         /// <remarks>
-        /// The village mission takes several minutes to play and the only interesting second is
-        /// the one where it pays out. This drives the same completion the mission itself calls, so
-        /// whatever a quest hands over on success is handed over now, probe and all.
+        /// For getting out of a mission rather than playing it to the end. It calls the game's own
+        /// EndMission, so the mission tears itself down the way it always does and whatever is
+        /// waiting for it to finish still runs.
         ///
-        /// Every active quest, not a chosen one: the quest worth testing is rarely the only one
-        /// running, and picking through them by name is a worse tool than finishing the lot on a
-        /// test campaign.
+        /// Note it ends the mission, which is not the same as winning it: a scene left this way
+        /// counts as left, not completed, and a reward that depends on completing it will not
+        /// arrive.
         /// </remarks>
-        private static void CompleteQuests()
+        private static void EndActiveMission()
         {
             try
             {
-                var manager = Campaign.Current?.QuestManager;
-                if (manager == null) { Say("No campaign, so no quests."); return; }
+                var mission = Mission.Current;
+                if (mission == null) { Say("No mission is running."); return; }
 
-                var quests = new List<QuestBase>();
-                foreach (var quest in manager.Quests)
-                    if (quest != null && !quest.IsFinalized) quests.Add(quest);
-
-                if (quests.Count == 0) { Say("No active quests to complete."); return; }
-
-                foreach (var quest in quests)
-                {
-                    Log.Write("Debug: completing quest " + quest.GetType().Name + " - " + quest.Title);
-                    quest.CompleteQuestWithSuccess();
-                }
-
-                Say($"Completed {quests.Count} quest(s). The log lists what they paid.");
-            }
-            catch (TargetInvocationException invocation)
-            {
-                Guard.Report("CompleteQuests", invocation.InnerException ?? invocation);
-                Say("A quest refused to complete; see the mod log.");
+                Log.Write("Debug: ending the active mission from the settings screen");
+                mission.EndMission();
+                Say("Mission ended.");
             }
             catch (Exception exception)
             {
-                Guard.Report("CompleteQuests", exception);
-                Say("Could not complete the quests; see the mod log.");
+                Guard.Report("EndMission", exception);
+                Say("Could not end the mission; see the mod log.");
             }
         }
 
