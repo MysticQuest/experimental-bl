@@ -125,58 +125,43 @@ namespace ProgressionExpanded
         {
             dataStore.SyncData("ProgressionExpanded_SweepPending", ref _sweepPending);
             dataStore.SyncData("ProgressionExpanded_TutorialPending", ref _tutorialPending);
-            dataStore.SyncData("ProgressionExpanded_KitGiven", ref _kitGiven);
         }
 
-        /// <summary>Whether the first battle spoils have already been swapped for the kit.</summary>
-        private bool _kitGiven;
-
-        /// <summary>Whether a fight's spoils should still be swapped for the kit.</summary>
-        internal bool WantsTheKitTaken => !_kitGiven && Mod.On
-                                          && (Settings.Instance?.StartWithNothing ?? false);
-
         /// <summary>
-        /// Takes back what a fight just paid into the packs and leaves the kit instead.
+        /// Takes back the gift the villagers just made, and leaves the kit instead.
         /// </summary>
         /// <remarks>
-        /// Called both from the loot hook and from the tick that watches the packs, so it has to
-        /// be safe to call when nothing has changed: it takes only what is above the counts it
-        /// was given, and does nothing at all when that comes to nothing.
+        /// Removes exactly the items in the named equipment set, one for one, rather than
+        /// anything else in the packs - so a player who arrived carrying something keeps it.
         /// </remarks>
-        internal void SwapTheSpoils(Dictionary<string, int> before)
+        internal void TakeTheVillagersGift(string setId)
         {
-            if (!WantsTheKitTaken) return;
+            if (!Mod.On || !(Settings.Instance?.StartWithNothing ?? false)) return;
 
             var roster = MobileParty.MainParty?.ItemRoster;
-            if (roster == null) return;
+            var gift = MBObjectManager.Instance?.GetObject<MBEquipmentRoster>(setId);
+            if (roster == null || gift == null) return;
 
             var taken = new List<string>();
-            var found = new List<ItemRosterElement>();
-            foreach (var element in roster) found.Add(element);
+            var kit = gift.DefaultEquipment;
 
-            foreach (var element in found)
+            for (var slot = EquipmentIndex.WeaponItemBeginSlot; slot < EquipmentIndex.NumEquipmentSetSlots; slot++)
             {
-                var item = element.EquipmentElement.Item;
-                if (item == null || item.StringId == Grain) continue;
+                var element = kit[slot];
+                if (element.IsEmpty || element.Item == null) continue;
 
-                before.TryGetValue(item.StringId, out var had);
-                var gained = element.Amount - had;
-                if (gained <= 0) continue;
-
-                roster.AddToCounts(element.EquipmentElement, -gained);
-                taken.Add(item.StringId + " x" + gained);
+                roster.AddToCounts(element.Item, -1);
+                taken.Add(element.Item.StringId);
             }
 
             if (taken.Count == 0) return;
-
-            _kitGiven = true;
 
             var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
             var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
             if (knife != null) roster.AddToCounts(knife, 1);
             if (shoes != null) roster.AddToCounts(shoes, 1);
 
-            Log.Write("Burlap sack: the spoils were " + string.Join(", ", taken.ToArray())
+            Log.Write("Burlap sack: villagers offered " + string.Join(", ", taken.ToArray())
                       + $"; left {knife?.StringId} (tier {knife?.Tier}) and {shoes?.StringId} (tier {shoes?.Tier})");
         }
 
@@ -235,38 +220,8 @@ namespace ProgressionExpanded
         {
             Sweep();
             Enforce();
-            WatchThePacks();
         }
 
-        /// <summary>
-        /// Swaps the first haul of a campaign for the kit, however it arrived.
-        /// </summary>
-        /// <remarks>
-        /// The reward for the mission in Tevea is handed over in conversation - pick the line
-        /// about taking whatever you can get and the items are simply in your packs, with no loot
-        /// screen and no battle resolution to hook. Four different hooks were written against
-        /// routes it does not take.
-        ///
-        /// So this stops caring how it arrives. While the setting is on and the kit is still
-        /// owed, the first non-grain items to appear in the packs are taken and the kit is left
-        /// in their place, whether they came from a fight, a conversation or anything else. It
-        /// costs a dictionary walk on a roster holding two items, on a tick, until it fires once.
-        /// </remarks>
-        private void WatchThePacks()
-        {
-            if (!WantsTheKitTaken) return;
-
-            var roster = MobileParty.MainParty?.ItemRoster;
-            if (roster == null || roster.Count == 0) return;
-
-            var before = new Dictionary<string, int>();
-            foreach (var element in roster)
-                if (element.EquipmentElement.Item != null
-                    && element.EquipmentElement.Item.StringId == Grain)
-                    before[Grain] = element.Amount;
-
-            SwapTheSpoils(before);
-        }
 
         /// <summary>An hour in, the scripted opening is done and the window closes for good.</summary>
         private void CloseWindow()
@@ -563,71 +518,46 @@ namespace ProgressionExpanded
 
 
     /// <summary>
-    /// Watches a battle's loot land in the packs, and swaps the first lot for the kit.
+    /// Replaces the set the villagers hand over with a knife and a pair of boots.
     /// </summary>
     /// <remarks>
-    /// Hooked on the loot operation rather than on the event it raises, because the event is
-    /// raised at the very end of that operation - the items are already in the player's packs by
-    /// the time any listener sees it, so emptying the roster handed to a listener does nothing.
-    /// That is why patching the two OnCollectLootItems handlers reached the site and changed
-    /// nothing: one of them only deals with plundered gold, and the other runs too late.
+    /// This is it, found at last by looking up the dialogue line rather than by guessing at
+    /// mechanisms. Rescue the headman and VillagersInNeed.OnCompleteWithSuccess loads the
+    /// equipment roster named stealth_tutorial_set_player and tips every filled slot of it into
+    /// the player's packs: a seax, a falchion, throwing stones and the rest.
     ///
-    /// Measuring the packs either side of the whole operation cannot be fooled by which internal
-    /// route the items take. Whatever appeared, appeared because of this fight.
+    /// No loot screen, no battle resolution, no quest reward API - which is why hooks written
+    /// against fights, loot events and quest completion all reached their sites and changed
+    /// nothing, and why watching the packs for any arrival at all was a bad answer: it would have
+    /// robbed a player who had picked something up first.
+    ///
+    /// Knowing the exact set means exactly those items can be taken back, and nothing else.
     /// </remarks>
     [HarmonyPatch]
-    internal static class BattleLootPatch
+    internal static class VillagersRewardPatch
     {
-        private static readonly Dictionary<string, int> Before = new Dictionary<string, int>();
-        private static bool _watching;
+        private const string Quest = "StoryMode.Quests.TutorialPhase.VillagersInNeed";
+        private const string Set = "stealth_tutorial_set_player";
 
         private static bool Prepare() => Target() != null;
 
         private static MethodBase? Target() =>
-            AccessTools.Method(AccessTools.TypeByName("TaleWorlds.CampaignSystem.MapEvent"),
-                "LootDefeatedPartyItems");
+            AccessTools.Method(AccessTools.TypeByName(Quest), "OnCompleteWithSuccess");
 
         private static MethodBase TargetMethod() => Target()!;
 
-        [HarmonyPrefix]
-        private static void Remember()
-        {
-            Guard.Touch("BattleLootWatch");
-            _watching = false;
-
-            try
-            {
-                if (DestituteStartBehavior.Current?.WantsTheKitTaken != true) return;
-
-                var roster = MobileParty.MainParty?.ItemRoster;
-                if (roster == null) return;
-
-                Before.Clear();
-                foreach (var element in roster)
-                    if (element.EquipmentElement.Item != null)
-                        Before[element.EquipmentElement.Item.StringId] = element.Amount;
-
-                _watching = true;
-            }
-            catch (Exception exception)
-            {
-                Guard.Report("BattleLootWatch", exception);
-            }
-        }
-
         [HarmonyPostfix]
-        private static void Swap()
+        private static void Trim()
         {
+            Guard.Touch("VillagersReward");
+
             try
             {
-                if (!_watching) return;
-                _watching = false;
-
-                DestituteStartBehavior.Current?.SwapTheSpoils(Before);
+                DestituteStartBehavior.Current?.TakeTheVillagersGift(Set);
             }
             catch (Exception exception)
             {
-                Guard.Report("BattleLoot", exception);
+                Guard.Report("VillagersReward", exception);
             }
         }
     }
