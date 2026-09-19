@@ -34,8 +34,8 @@ namespace ProgressionExpanded
         /// vanilla's five focus points at a flat price, and its steep wall at the top - while
         /// leaving both bonus groups switched on.
         /// </remarks>
-        [SettingPropertyBool("Start with nothing (new campaigns only)", Order = 5, RequireRestart = false,
-            HintText = "Takes back everything character creation hands out. You begin in a burlap tunic with a handful of stones, no horse, no weapons, no gold and an empty inventory - food included. Only applies when a new campaign begins; an existing one is never stripped.")]
+        [SettingPropertyBool("Start with a burlap sack (new campaigns only)", Order = 5, RequireRestart = false,
+            HintText = "The bandits who came for your family took the rest of it too - the horse, the purse, your father's sword - and your brother, who still has his, is not in a sharing mood. You begin in a burlap sack with a handful of stones: no weapons, no horse, no gold, and nothing in the packs, food included. Only applies when a new campaign begins; an existing one is never stripped.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool StartWithNothing { get; set; } = true;
 

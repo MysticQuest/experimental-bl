@@ -51,22 +51,27 @@ namespace ProgressionExpanded
                 var cloth = MBObjectManager.Instance?.GetObject<ItemObject>(Cloth);
                 var pebbles = MBObjectManager.Instance?.GetObject<ItemObject>(Pebbles);
 
+                // Three sets, not two. The stealth set is the one that is easy to miss, because
+                // nothing shows it until the first time you sneak into a town and find yourself
+                // better dressed than you were an hour ago.
                 Undress(hero.BattleEquipment, cloth, pebbles);
                 Undress(hero.CivilianEquipment, cloth, null);
+                Undress(hero.StealthEquipment, cloth, null);
 
                 if (hero.Gold > 0) hero.ChangeHeroGold(-hero.Gold);
 
                 var party = MobileParty.MainParty;
                 if (party != null)
                 {
-                    // Food included. Starting with nothing means starting hungry, and the first
-                    // thing a player does is go and fix that.
+                    // Last, so that anything the equipment changes handed back lands in here
+                    // before it is swept. Food included: starting with nothing means starting
+                    // hungry, and the first thing a player does is go and fix that.
                     party.ItemRoster?.Clear();
                 }
 
-                Log.Write("Start with nothing: stripped both equipment sets, gold and inventory");
+                Log.Write("Burlap sack: stripped all three equipment sets, gold and inventory");
 
-                var message = new TextObject("{=MCpoor}You begin with the clothes you stand in and a handful of stones.");
+                var message = new TextObject("{=MCpoor}A burlap sack and a handful of stones. Everything else is gone.");
                 InformationManager.DisplayMessage(new InformationMessage(message.ToString()));
             }
             catch (Exception exception)
