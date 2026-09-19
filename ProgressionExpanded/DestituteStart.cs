@@ -175,16 +175,6 @@ namespace ProgressionExpanded
         /// </remarks>
         private bool _retrofitted;
 
-        /// <summary>
-        /// Ids handed over by earlier builds of this mod, before the kit was chosen by name.
-        /// </summary>
-        /// <remarks>
-        /// Sorting the item list by tier picked a named quest dagger and a pair of boots from a
-        /// different mod, and those are sitting in save files now. They are cleaned up here
-        /// because this mod put them there; nothing else of the player's is second-guessed.
-        /// </remarks>
-        private static readonly string[] BadKit = { "dagger_golden_claw", "dp_fine_town_boots_l" };
-
         private void Retrofit()
         {
             if (_retrofitted) return;
@@ -197,41 +187,11 @@ namespace ProgressionExpanded
                 var said = SwapNow("stealth_tutorial_set_player");
                 if (said.StartsWith("Took", StringComparison.Ordinal))
                     InformationManager.DisplayMessage(new InformationMessage(said));
-
-                ClearBadKit();
             }
             catch (Exception exception)
             {
                 Guard.Report("Retrofit", exception);
             }
-        }
-
-        /// <summary>Takes back the wrong kit an earlier build handed over, and pays the right one.</summary>
-        private void ClearBadKit()
-        {
-            var roster = MobileParty.MainParty?.ItemRoster;
-            if (roster == null) return;
-
-            var taken = new List<string>();
-            foreach (var id in BadKit)
-            {
-                var item = MBObjectManager.Instance?.GetObject<ItemObject>(id);
-                if (item == null || roster.GetItemNumber(item) <= 0) continue;
-
-                roster.AddToCounts(item, -roster.GetItemNumber(item));
-                taken.Add(id);
-            }
-
-            if (taken.Count == 0) return;
-
-            var knife = Kit(Knife, ItemObject.ItemTypeEnum.OneHandedWeapon);
-            var shoes = Kit(Boots, ItemObject.ItemTypeEnum.LegArmor);
-            if (knife != null && roster.GetItemNumber(knife) <= 0) roster.AddToCounts(knife, 1);
-            if (shoes != null && roster.GetItemNumber(shoes) <= 0) roster.AddToCounts(shoes, 1);
-
-            Log.Write("Burlap sack: cleared the wrong kit - " + string.Join(", ", taken.ToArray()));
-            InformationManager.DisplayMessage(new InformationMessage(
-                "Replaced the wrong kit this mod gave you with the knife and shoes."));
         }
 
         /// <summary>
