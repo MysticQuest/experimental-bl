@@ -152,6 +152,11 @@ namespace ProgressionExpanded
 
         // --- Skill XP rates. 1.0 is the game's own award rate; higher pays more per event. ---
 
+        [SettingPropertyBool("Practice fights cost health", Order = 99, RequireRestart = true,
+            HintText = "Going down in the practice ring takes a fifth of your health, and it does not come back when you stand up. Five knockdowns and there is nothing left; long before that the wound threshold puts you out of the ring until you have healed. Without it, paying a real rate for practice makes the ring the obvious way to train everything.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 3)]
+        public bool PracticeInjuries { get; set; } = true;
+
         [SettingPropertyFloatingInteger("Practice fights", 0f, 1f, "0.00", Order = 100, RequireRestart = false,
             HintText = "What a hit in the practice ring is worth against the same hit in a real battle. Vanilla pays 0.06, which is a rounding error next to what a skill level costs here.")]
         [SettingPropertyGroup(Rates, GroupOrder = 3)]
