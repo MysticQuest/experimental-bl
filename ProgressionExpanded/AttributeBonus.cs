@@ -28,13 +28,25 @@ namespace ProgressionExpanded
     internal static class AttributeBonus
     {
         internal const int VigorHitPoints = 2;             // hit points
+        internal const float VigorMomentum = 0.01f;        // swing carried through a hit
+        internal const float VigorKnockback = 0.01f;       // knockback, as a share of the base
         internal const float ControlHandling = 0.01f;      // weapon handling
-        internal const float ControlResistance = 0.01f;    // damage taken
         internal const float ControlStagger = 0.01f;       // damage needed to stagger you
         internal const float EnduranceMountSpeed = 0.01f;  // horse speed
         internal const float EnduranceRunSpeed = 0.01f;    // running speed
         internal const int EnduranceStamina = 5;           // smithing stamina
-        internal const int EnduranceHitPoints = 1;         // hit points
+        internal const float EnduranceResistance = 0.01f;  // damage taken
+
+        /// <summary>
+        /// Vanilla's own floor for how hard a man is to knock back, before Athletics is counted.
+        /// </summary>
+        /// <remarks>
+        /// Knockback is decided by weighing a blow against the victim's resistance less the
+        /// attacker's penetration, and that penetration is zero for everyone without the polearm
+        /// perk that grants it. A percentage of zero is zero, so Vigor's share is a percentage of
+        /// this instead: +1% a point means a tenth off a typical man's footing at Vigor 10.
+        /// </remarks>
+        internal const float BaseKnockBackResistance = 0.15f;
         internal const float CunningBattleLoot = 0.02f;    // share of battle loot
         internal const int SocialPointsPerCompanion = 5;   // one companion per five points
         internal const float IntelligenceLearning = 0.01f; // learning rate, every skill
@@ -106,7 +118,7 @@ namespace ProgressionExpanded
         }
     }
 
-    /// <summary>Vigor and Endurance both carry you further before you fall over.</summary>
+    /// <summary>Vigor is what there is of you to cut through.</summary>
     [HarmonyPatch(typeof(DefaultCharacterStatsModel), nameof(DefaultCharacterStatsModel.MaxHitpoints))]
     internal static class VigorHitPointsPatch
     {
@@ -123,10 +135,6 @@ namespace ProgressionExpanded
                 var vigor = AttributeBonus.Of(hero, DefaultCharacterAttributes.Vigor);
                 if (vigor > 0)
                     __result.Add(vigor * AttributeBonus.VigorHitPoints, new TextObject("{=MCvig}Vigor"));
-
-                var endurance = AttributeBonus.Of(hero, DefaultCharacterAttributes.Endurance);
-                if (endurance > 0)
-                    __result.Add(endurance * AttributeBonus.EnduranceHitPoints, new TextObject("{=MCend}Endurance"));
         
                         }
             catch (Exception exception)
@@ -233,7 +241,7 @@ namespace ProgressionExpanded
     }
 
     /// <summary>
-    /// Control also means taking a hit better than you otherwise would.
+    /// Endurance is what lets you take a hit and keep going.
     /// </summary>
     /// <remarks>
     /// Hung on the amplification step rather than the reduction one purely because this is the
@@ -242,9 +250,9 @@ namespace ProgressionExpanded
     /// </remarks>
     [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
         nameof(SandboxAgentApplyDamageModel.ApplyDamageAmplifications))]
-    internal static class ControlResistancePatch
+    internal static class EnduranceResistancePatch
     {
-        /// <summary>However controlled you are, a blow always lands for something.</summary>
+        /// <summary>However tough you are, a blow always lands for something.</summary>
         private const float Floor = 0.5f;
 
         [HarmonyPostfix]
@@ -256,14 +264,80 @@ namespace ProgressionExpanded
             try
             {
                 var victim = (attackInformation.VictimAgentCharacter as CharacterObject)?.HeroObject;
-                var control = AttributeBonus.Of(victim, DefaultCharacterAttributes.Control);
-                if (control <= 0) return;
+                var endurance = AttributeBonus.Of(victim, DefaultCharacterAttributes.Endurance);
+                if (endurance <= 0) return;
 
-                __result *= Math.Max(Floor, 1f - AttributeBonus.ControlResistance * control);
+                __result *= Math.Max(Floor, 1f - AttributeBonus.EnduranceResistance * endurance);
             }
             catch
             {
                 // Never throw on a damage tick.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Vigor drives the swing on through the man it just hit.
+    /// </summary>
+    /// <remarks>
+    /// Momentum is what is left of a blow after it lands, and it decides whether the same swing
+    /// reaches the next man. It is continuous -- no threshold, no roll -- so it scales smoothly
+    /// instead of switching on, which is what makes it the honest way to spend strength.
+    /// </remarks>
+    [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
+        nameof(SandboxAgentApplyDamageModel.CalculateRemainingMomentum))]
+    internal static class VigorMomentumPatch
+    {
+        [HarmonyPostfix]
+        private static void Carry(Agent attacker, ref float __result)
+        {
+            Guard.Touch("Momentum");
+
+            try
+            {
+                if (__result <= 0f || !AttributeBonus.Active() || attacker == null) return;
+
+                var vigor = AttributeBonus.Of(AttributeBonus.HeroOf(attacker), DefaultCharacterAttributes.Vigor);
+                if (vigor > 0) __result *= 1f + AttributeBonus.VigorMomentum * vigor;
+            }
+            catch
+            {
+                // Never throw mid-blow.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Vigor also means the man you hit gives ground.
+    /// </summary>
+    /// <remarks>
+    /// Knockback is weighed against the victim's resistance, which starts at 0.15 and climbs with
+    /// their Athletics; the attacker's side of the sum is a penetration figure vanilla leaves at
+    /// zero. Vigor adds to it, scaled against that base so the number means what the card says.
+    ///
+    /// Knockback rather than knockdown, deliberately. Knockback costs the victim a step and their
+    /// next swing; knockdown usually costs them the fight.
+    /// </remarks>
+    [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
+        nameof(SandboxAgentApplyDamageModel.GetKnockBackPenetration))]
+    internal static class VigorKnockbackPatch
+    {
+        [HarmonyPostfix]
+        private static void Drive(Agent attackerAgent, ref float __result)
+        {
+            Guard.Touch("KnockBack");
+
+            try
+            {
+                if (!AttributeBonus.Active() || attackerAgent == null) return;
+
+                var vigor = AttributeBonus.Of(AttributeBonus.HeroOf(attackerAgent), DefaultCharacterAttributes.Vigor);
+                if (vigor > 0)
+                    __result += AttributeBonus.VigorKnockback * vigor * AttributeBonus.BaseKnockBackResistance;
+            }
+            catch
+            {
+                // Never throw mid-blow.
             }
         }
     }
