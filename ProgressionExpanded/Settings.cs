@@ -386,12 +386,12 @@ namespace ProgressionExpanded
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
         [SettingPropertyButton("Save character*", Content = "Save", Order = 9, RequireRestart = false,
-            HintText = "Saves name, face, height, weight, build, attributes, focus and skill levels to a file beside the settings. * Not saved: voice, which has no setting of its own and travels only if the game keeps it inside the face key; age, which comes from a birthday rather than a number; culture and the backstory choices, which the game has already spent by the time you can press this; and anything you own - gear, gold, party and clan are a campaign, not a character. Making the same character again for every test campaign is the slow part of testing anything that only happens on a new one.")]
+            HintText = "Saves name, face, height, weight, build, attributes, focus and skills, so you need only make a character once. * Not saved: voice, age, culture and anything you own.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action SaveCharacter { get; set; } = CharacterTemplate.Save;
 
         [SettingPropertyButton("Load character*", Content = "Load", Order = 10, RequireRestart = false,
-            HintText = "Stamps the saved one onto whoever you are playing now. Make any character at all, press this, and you are the one you saved, minus the asterisked parts. A development tool: it writes straight to the hero with none of the game's own bookkeeping, which is fine on a test campaign and not something to do to a real one.")]
+            HintText = "Makes whoever you are playing into the saved one. A test tool: it writes straight to the hero, so use it on a test campaign rather than a real one.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action LoadCharacter { get; set; } = CharacterTemplate.Load;
 
