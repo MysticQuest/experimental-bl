@@ -50,7 +50,7 @@ namespace ProgressionExpanded
         /// </remarks>
         internal const float BaseKnockBackResistance = 0.15f;
         internal const float CunningBattleLoot = 0.02f;    // share of battle loot
-        internal const float CunningCheatDeath = 0.02f;    // share of lethal blows survived
+        internal const float CunningCheatDeath = 0.01f;    // share of lethal blows survived
         internal const int SocialPointsPerCompanion = 5;   // one companion per five points
         internal const float IntelligenceLearning = 0.01f; // learning rate, every skill
         internal const float IntelligenceCeiling = 1f;     // learning limit, every skill
