@@ -119,6 +119,10 @@ namespace ProgressionExpanded
             {
                 if (settings.RepairSkillXp) campaignStarter.AddBehavior(new XpRepairBehavior());
                 else Log.Write("Skill XP repair switched off");
+
+                // Always added; the behaviour itself checks the setting and only ever fires on a
+                // new campaign, so there is nothing to gate at load time.
+                campaignStarter.AddBehavior(new DestituteStartBehavior());
                 Log.Write("Behaviours registered");
             }
             Log.Write($"Active. 275 lands at level {Curve.MasteryLevel:0.0}, 330 at {settings.Level330}, "

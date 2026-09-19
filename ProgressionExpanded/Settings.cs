@@ -34,6 +34,11 @@ namespace ProgressionExpanded
         /// vanilla's five focus points at a flat price, and its steep wall at the top - while
         /// leaving both bonus groups switched on.
         /// </remarks>
+        [SettingPropertyBool("Start with nothing (new campaigns only)", Order = 5, RequireRestart = false,
+            HintText = "Takes back everything character creation hands out. You begin in a burlap tunic with a handful of stones, no horse, no weapons, no gold and an empty inventory - food included. Only applies when a new campaign begins; an existing one is never stripped.")]
+        [SettingPropertyGroup(Features, GroupOrder = 0)]
+        public bool StartWithNothing { get; set; } = true;
+
         [SettingPropertyButton("Information", Content = "Read", Order = 6,
             RequireRestart = false,
             HintText = "What this mod is and how finished it is, plus which settings take hold at once, which need the campaign reloaded, and what may happen to skills you have already earned. Worth a read before changing anything in a campaign you care about.")]
