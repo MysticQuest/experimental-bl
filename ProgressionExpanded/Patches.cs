@@ -145,6 +145,46 @@ namespace ProgressionExpanded
     }
 
     /// <summary>
+    /// Greys out the focus button when the point on offer costs more than you hold.
+    /// </summary>
+    /// <remarks>
+    /// The button reads <c>SkillVM.CanAddFocus</c>, which comes straight from this predicate, and
+    /// vanilla asks only whether the balance is above zero -- correct when every point costs one.
+    /// The cost is fetched a few lines earlier in the same refresh, but only to write the hint
+    /// text, so with escalating costs the screen would explain that you cannot afford the point
+    /// and leave the button live next to it, and a hero holding one point could buy a point
+    /// costing two.
+    ///
+    /// The argument is the pending focus level, the one the screen is showing rather than the one
+    /// the hero has committed, so the cost quoted here is the cost of the point actually on offer.
+    /// </remarks>
+    [HarmonyPatch(typeof(CharacterDeveloperHeroItemVM),
+        nameof(CharacterDeveloperHeroItemVM.CanAddFocusToSkillWithFocusAmount))]
+    internal static class AffordableFocusButtonPatch
+    {
+        [HarmonyPostfix]
+        private static void RequireAffordable(CharacterDeveloperHeroItemVM __instance, int currentFocusAmount,
+            ref bool __result)
+        {
+            Guard.Touch("FocusButton");
+            if (!__result || __instance == null) return;
+
+            try
+            {
+                var settings = Settings.Instance;
+                if (!Mod.On || settings == null || !settings.EscalatingFocusCost) return;
+
+                if (Curve.FocusPointCost(currentFocusAmount + 1) > __instance.UnspentCharacterPoints)
+                    __result = false;
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("FocusButton", exception);
+            }
+        }
+    }
+
+    /// <summary>
     /// Some skills are paid far less often than others -- Engineering only earns during a siege,
     /// Trade only against your own profit -- so their awards are scaled before anything else.
     /// </summary>
