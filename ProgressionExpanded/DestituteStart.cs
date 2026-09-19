@@ -570,17 +570,40 @@ namespace ProgressionExpanded
     }
 
     /// <summary>
-    /// The one place an item can be refused before it reaches the packs.
+    /// The place an item can be refused before it reaches the packs.
     /// </summary>
-    [HarmonyPatch(typeof(ItemRoster), nameof(ItemRoster.AddToCounts), new[] { typeof(ItemObject), typeof(int) })]
+    /// <remarks>
+    /// Both overloads, because the one the quest uses is the one taking an EquipmentElement -
+    /// it reads each slot of the equipment set and hands the element straight over. Patching the
+    /// ItemObject overload alone refused nothing, and the log showed the prefix running and
+    /// finding no additions to turn away.
+    /// </remarks>
+    [HarmonyPatch]
     internal static class RefuseItemPatch
     {
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            var byItem = AccessTools.Method(typeof(ItemRoster), nameof(ItemRoster.AddToCounts),
+                new[] { typeof(ItemObject), typeof(int) });
+            if (byItem != null) yield return byItem;
+
+            var byElement = AccessTools.Method(typeof(ItemRoster), nameof(ItemRoster.AddToCounts),
+                new[] { typeof(EquipmentElement), typeof(int) });
+            if (byElement != null) yield return byElement;
+        }
+
         [HarmonyPrefix]
-        private static bool Decline(ItemRoster __instance, ItemObject item, int number, ref int __result)
+        private static bool Decline(ItemRoster __instance, object[] __args, ref int __result)
         {
             try
             {
-                if (number <= 0 || !VillagersRewardPatch.Turning(__instance, item)) return true;
+                if (__args == null || __args.Length < 2) return true;
+                if (!(__args[1] is int number) || number <= 0) return true;
+
+                var item = __args[0] as ItemObject;
+                if (item == null && __args[0] is EquipmentElement element) item = element.Item;
+
+                if (!VillagersRewardPatch.Turning(__instance, item)) return true;
 
                 __result = 0;
                 return false;
