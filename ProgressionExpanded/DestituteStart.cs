@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.GameState;
 using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
@@ -52,8 +54,12 @@ namespace ProgressionExpanded
         /// </remarks>
         private bool _sweepPending;
 
+        /// <summary>The live behaviour, so the map-ready patch can reach it.</summary>
+        internal static DestituteStartBehavior? Current { get; private set; }
+
         public override void RegisterEvents()
         {
+            Current = this;
             CampaignEvents.OnNewGameCreatedPartialFollowUpEndEvent.AddNonSerializedListener(this, Strip);
             CampaignEvents.TickEvent.AddNonSerializedListener(this, OnTick);
             CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, CloseWindow);
@@ -72,7 +78,10 @@ namespace ProgressionExpanded
             _sweepPending = false;
         }
 
-        private void Sweep()
+        /// <summary>
+        /// Takes back whatever arrived after the strip. Safe to call as often as you like.
+        /// </summary>
+        internal void Sweep()
         {
             if (!_sweepPending) return;
 
@@ -179,6 +188,34 @@ namespace ProgressionExpanded
 
             if (cloth != null) set[EquipmentIndex.Body] = new EquipmentElement(cloth);
             if (pebbles != null) set[EquipmentIndex.Weapon0] = new EquipmentElement(pebbles);
+        }
+    }
+
+    /// <summary>
+    /// Sweeps the purse the moment the map has loaded, before it is drawn.
+    /// </summary>
+    /// <remarks>
+    /// The real-time tick already catches a late handout, but only once the map is running -
+    /// which means a frame or two where a thousand denars is sitting there in plain sight. This
+    /// runs at the end of the map's own loading, so the first world screen a player ever sees
+    /// already reads zero.
+    /// </remarks>
+    [HarmonyPatch(typeof(MapState), nameof(MapState.OnLoadingFinished))]
+    internal static class MapReadyPatch
+    {
+        [HarmonyPostfix]
+        private static void Sweep()
+        {
+            Guard.Touch("MapReady");
+
+            try
+            {
+                DestituteStartBehavior.Current?.Sweep();
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("MapReady", exception);
+            }
         }
     }
 }
