@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <RootNamespace>MasteryCurve</RootNamespace>
-    <AssemblyName>MasteryCurve</AssemblyName>
-    <ModuleName>MasteryCurve</ModuleName>
+    <RootNamespace>ProgressionExpanded</RootNamespace>
+    <AssemblyName>ProgressionExpanded</AssemblyName>
+    <ModuleName>ProgressionExpanded</ModuleName>
     <Configurations>Debug;Release</Configurations>
     <Platforms>x64</Platforms>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>

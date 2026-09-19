@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Module xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/BUTR/Bannerlord.XmlSchemas/master/SubModule.xsd">
-  <Id value="MasteryCurve" />
-  <Name value="Mastery Curve" />
+  <Id value="ProgressionExpanded" />
+  <Name value="Progression Expanded" />
   <Version value="v1.0.0" />
   <DefaultModule value="false" />
   <ModuleCategory value="Singleplayer" />
@@ -31,9 +31,9 @@
   </DependedModuleMetadatas>
   <SubModules>
     <SubModule>
-      <Name value="MasteryCurve" />
-      <DLLName value="MasteryCurve.dll" />
-      <SubModuleClassType value="MasteryCurve.SubModule" />
+      <Name value="ProgressionExpanded" />
+      <DLLName value="ProgressionExpanded.dll" />
+      <SubModuleClassType value="ProgressionExpanded.SubModule" />
       <Tags />
     </SubModule>
   </SubModules>
