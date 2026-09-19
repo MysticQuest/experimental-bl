@@ -8,7 +8,7 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// The save-load failure produced a dump with no exception stream at all, which means the game
-    /// was not throwing -- it had stopped responding. A hang leaves no stack and no message, so the
+    /// was not throwing - it had stopped responding. A hang leaves no stack and no message, so the
     /// only evidence available is whether something of ours is being called a preposterous number
     /// of times, and with what argument.
     ///

@@ -7,8 +7,8 @@ namespace ProgressionExpanded
     /// Whether the module should be doing anything at all.
     /// </summary>
     /// <remarks>
-    /// <c>Settings.Instance</c> is null during <c>OnSubModuleLoad</c> -- MCM has not built it yet
-    /// -- so a guard written against it silently passes and every patch is applied anyway. That
+    /// <c>Settings.Instance</c> is null during <c>OnSubModuleLoad</c> - MCM has not built it yet
+    /// - so a guard written against it silently passes and every patch is applied anyway. That
     /// made the Enabled switch a lie: turning the mod off still left twenty-odd patches running,
     /// and every attempt to narrow a fault by switching things off was measuring the wrong thing.
     ///

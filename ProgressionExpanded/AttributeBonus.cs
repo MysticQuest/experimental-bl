@@ -119,8 +119,8 @@ namespace ProgressionExpanded
         /// <remarks>
         /// Every other bonus here pays the hero who owns the attribute. This one pays everyone
         /// except them: companions, spouse and children learn faster because of your Social, and
-        /// your own skills are untouched by it. It suits the attribute -- Social is the one that
-        /// governs nothing you do alone -- and it pairs with the companion limit, which decides
+        /// your own skills are untouched by it. It suits the attribute - Social is the one that
+        /// governs nothing you do alone - and it pairs with the companion limit, which decides
         /// how many of them there are rather than how good they get.
         ///
         /// Player clan only. A clan-wide learning multiplier handed to every AI lord in Calradia
@@ -188,8 +188,8 @@ namespace ProgressionExpanded
     /// Control steadies whatever is in your hands; Endurance moves you and your horse faster.
     /// </summary>
     /// <remarks>
-    /// Handling is the one driven property that every weapon uses -- how quickly it readies, turns
-    /// and recovers -- which is what makes it the honest home for a bonus described as global.
+    /// Handling is the one driven property that every weapon uses - how quickly it readies, turns
+    /// and recovers - which is what makes it the honest home for a bonus described as global.
     /// A mount is its own agent, so the horse's share is applied when the mount comes past with
     /// its rider attached rather than to the rider's own properties.
     /// </remarks>
@@ -237,7 +237,7 @@ namespace ProgressionExpanded
     /// <remarks>
     /// The model returns the damage a blow must do to stagger the defender, so raising it is
     /// resistance: the same hit that used to interrupt your swing no longer does. It is the
-    /// defender-side counterpart to the handling bonus -- one keeps the weapon steady between
+    /// defender-side counterpart to the handling bonus - one keeps the weapon steady between
     /// swings, the other keeps it steady through one.
     ///
     /// The <c>in</c> parameter is declared <c>ref</c> because that is the shape Harmony matches.
@@ -321,7 +321,7 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// A blocked blow freezes both men for a moment. The defender's share of that is the half
-    /// second that gets people killed -- the block held, and the counter was too late anyway.
+    /// second that gets people killed - the block held, and the counter was too late anyway.
     /// Control shortens yours and lengthens theirs, so stopping a blow starts to be worth
     /// something rather than merely not costing you anything.
     ///
@@ -408,7 +408,7 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// Momentum is what is left of a blow after it lands, and it decides whether the same swing
-    /// reaches the next man. It is continuous -- no threshold, no roll -- so it scales smoothly
+    /// reaches the next man. It is continuous - no threshold, no roll - so it scales smoothly
     /// instead of switching on, which is what makes it the honest way to spend strength.
     /// </remarks>
     [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
@@ -473,8 +473,8 @@ namespace ProgressionExpanded
     /// Cunning is not being the one they remember.
     /// </summary>
     /// <remarks>
-    /// Crime rating drifts down on its own -- five a day against a faction you are not currently
-    /// robbing -- and climbs while you hold alleys or raid. Cunning makes the drift steeper by 1%
+    /// Crime rating drifts down on its own - five a day against a faction you are not currently
+    /// robbing - and climbs while you hold alleys or raid. Cunning makes the drift steeper by 1%
     /// a point, so a reputation earned in a bad week costs fewer good ones to shed.
     ///
     /// Only when the day's net change is already negative. Scaling it whichever way it pointed
@@ -553,7 +553,7 @@ namespace ProgressionExpanded
     /// aimed at a grind rather than at a battle.
     ///
     /// The game counts research in whole points, and a tenth of a small number rounds to nothing,
-    /// so the result is rounded up -- otherwise the bonus would be invisible on exactly the early
+    /// so the result is rounded up - otherwise the bonus would be invisible on exactly the early
     /// items where the grind is worst.
     /// </remarks>
     [HarmonyPatch]
@@ -631,7 +631,7 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// The game decides a downed hero's fate with a survival roll. This does not raise that
-    /// chance directly -- it takes a share of what is left of it, so the figure on the card means
+    /// chance directly - it takes a share of what is left of it, so the figure on the card means
     /// what it says: at Cunning 10, one lethal blow in five turns out not to have been. A hero
     /// already certain to live gains nothing, and the roll can never be pushed past certainty.
     ///

@@ -30,7 +30,7 @@ namespace ProgressionExpanded
             /// </summary>
             /// <remarks>
             /// Companions arrive one at a time, five points apart. Stating that as "+0.2 per point"
-            /// is arithmetically right and tells the player nothing they can act on -- worse, next
+            /// is arithmetically right and tells the player nothing they can act on - worse, next
             /// to a floored total it reads as "you have none, and a point buys a fifth of one".
             /// A bonus that arrives whole is quoted as the interval it arrives on instead.
             /// </remarks>
@@ -52,12 +52,12 @@ namespace ProgressionExpanded
             /// <remarks>
             /// Kept to one printed line each. The card draws this block below the bound-skill
             /// icons but sizes it from the middle, so a line that wraps grows the block upward
-            /// and over the icon captions -- which is exactly what a sentence like "faster
+            /// and over the icon captions - which is exactly what a sentence like "faster
             /// recovery after a block, and longer for whoever you blocked" did.
             ///
             /// The budget is roughly fifty characters for the whole line, which is a good deal
             /// more than one word. Names are written to be understood by someone who has never
-            /// read the settings -- "knockback, knockdown and dismount resistance", not "footing" -- and
+            /// read the settings - "knockback, knockdown and dismount resistance", not "footing" - and
             /// only the rate is abbreviated, because the bracket repeats on every line and its
             /// meaning is obvious from the total in front of it.
             /// </remarks>

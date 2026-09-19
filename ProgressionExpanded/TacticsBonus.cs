@@ -15,12 +15,12 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// Vanilla gives Tactics exactly two personal effects: an auto-resolve advantage and a
-    /// reduction in the men left behind when breaking off. The first is deliberately untouched --
+    /// reduction in the men left behind when breaking off. The first is deliberately untouched -
     /// paying Tactics again there would only widen the gap between simulating a fight and leading
     /// one. The second is reshaped rather than duplicated. The three added here are things nothing
     /// in the game does: parties thinking better of attacking you, reading a stronghold's defences
     /// from a distance, and getting your own men back onto the field faster in a battle you fight
-    /// rather than simulate -- which is what finally gives Tactics something to say in a battle
+    /// rather than simulate - which is what finally gives Tactics something to say in a battle
     /// you lead yourself.
     /// </remarks>
     internal static class TacticsBonus
@@ -30,7 +30,7 @@ namespace ProgressionExpanded
         /// </summary>
         /// <remarks>
         /// Vanilla already has this as <c>TacticsTroopSacrificeReduction</c>, at a flat 0.1% a
-        /// point reaching 33% at 330. It is not added to -- it is replaced, so there is still
+        /// point reaching 33% at 330. It is not added to - it is replaced, so there is still
         /// exactly one rule, rising just as evenly but worth half your losses at the cap rather
         /// than a third.
         /// </remarks>
@@ -58,7 +58,7 @@ namespace ProgressionExpanded
     /// <remarks>
     /// Every consumer of a skill effect goes through <c>GetSkillEffectValue</c>, including the text
     /// the character screen prints, so reshaping here keeps the number and its description from
-    /// ever disagreeing. Every one of these stays a straight line, like the rest of the game --
+    /// ever disagreeing. Every one of these stays a straight line, like the rest of the game -
     /// only the height it reaches changes, and only for our own effects and vanilla's Tactics
     /// sacrifice reduction. The other thirty vanilla personal effects are untouched.
     /// </remarks>
@@ -122,7 +122,7 @@ namespace ProgressionExpanded
     /// This is the gate the settlement tooltip and the encyclopedia both ask before they print a
     /// garrison. Vanilla opens it only for your own faction, for somewhere you are standing next
     /// to, or where you keep an emissary, a workshop or an alley. Tactics opens it by distance
-    /// instead -- nothing is revealed that a scout could not have brought back, it simply arrives
+    /// instead - nothing is revealed that a scout could not have brought back, it simply arrives
     /// without the scout.
     /// </remarks>
     [HarmonyPatch(typeof(DefaultInformationRestrictionModel),

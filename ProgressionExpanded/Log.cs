@@ -8,8 +8,8 @@ namespace ProgressionExpanded
     /// Writes the mod's own log file, next to the ones every other mod leaves behind.
     /// </summary>
     /// <remarks>
-    /// <c>Debug.Print</c> reaches nothing readable from outside a running game -- not ButterLib's
-    /// logs, not the trace file -- which turned a one-line bug into several rounds of guessing at
+    /// <c>Debug.Print</c> reaches nothing readable from outside a running game - not ButterLib's
+    /// logs, not the trace file - which turned a one-line bug into several rounds of guessing at
     /// it. Everything worth knowing after a crash goes here instead, in plain text, appended so a
     /// load that dies halfway still leaves its last line behind.
     /// </remarks>

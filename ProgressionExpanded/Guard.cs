@@ -8,7 +8,7 @@ namespace ProgressionExpanded
     /// Runs patch bodies so that a fault in one can never take the game down.
     /// </summary>
     /// <remarks>
-    /// These patches sit on some of the hottest paths in the campaign -- party AI scoring, damage,
+    /// These patches sit on some of the hottest paths in the campaign - party AI scoring, damage,
     /// hit points, every skill effect read. An unhandled exception in a Harmony patch on one of
     /// those is not a misbehaving feature, it is a crash to desktop, and a crash that leaves no
     /// managed trace in the dump.
@@ -39,7 +39,7 @@ namespace ProgressionExpanded
         /// </summary>
         /// <remarks>
         /// A crash to desktop takes no exception with it, so the only evidence left is how far the
-        /// game got. Once per site, then silent -- these sit on paths that run thousands of times
+        /// game got. Once per site, then silent - these sit on paths that run thousands of times
         /// a second.
         /// </remarks>
         internal static void Touch(string site)

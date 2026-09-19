@@ -30,8 +30,8 @@ namespace ProgressionExpanded
         /// <remarks>
         /// Twenty-odd knobs with no guidance is a page most people close again. "Default" is the
         /// tuning this mod is actually about; "Closer to vanilla" is for someone who wants the
-        /// bonuses without the pacing, and moves only the progression knobs -- shorter climb,
-        /// vanilla's five focus points at a flat price, and its steep wall at the top -- while
+        /// bonuses without the pacing, and moves only the progression knobs - shorter climb,
+        /// vanilla's five focus points at a flat price, and its steep wall at the top - while
         /// leaving both bonus groups switched on.
         /// </remarks>
         [SettingPropertyButton("Information", Content = "Read", Order = 6,
@@ -100,7 +100,7 @@ namespace ProgressionExpanded
         public bool Enabled { get; set; } = true;
 
         [SettingPropertyInteger("You can perfect a skill by character level", 30, 52, "0", Order = 2, RequireRestart = false,
-            HintText = "The earliest 330 is reachable at all, not a level you arrive at. It assumes everything lines up: 10 in the governing attribute, every focus point in that one skill, and the XP actually going there. Spread your effort wider, or leave a point unspent, and it takes longer -- most characters never get there.")]
+            HintText = "The earliest 330 is reachable at all, not a level you arrive at. It assumes everything lines up: 10 in the governing attribute, every focus point in that one skill, and the XP actually going there. Spread your effort wider, or leave a point unspent, and it takes longer - most characters never get there.")]
         [SettingPropertyGroup(Career, GroupOrder = 1)]
         public int Level330 { get; set; } = 40;
 
@@ -111,7 +111,7 @@ namespace ProgressionExpanded
         public float CareerLength { get; set; } = 2f;
 
         [SettingPropertyInteger("Focus points you get per level", 1, 10, "0", Order = 4, RequireRestart = false,
-            HintText = "Vanilla gives 1. Raising this only affects levels you gain from now on -- it does not hand out points for levels already behind you.")]
+            HintText = "Vanilla gives 1. Raising this only affects levels you gain from now on - it does not hand out points for levels already behind you.")]
         [SettingPropertyGroup(Career, GroupOrder = 1)]
         public int FocusPointsPerLevel { get; set; } = 1;
 
@@ -126,7 +126,7 @@ namespace ProgressionExpanded
         public float EarlySpeed { get; set; } = 3f;
 
         [SettingPropertyFloatingInteger("How punishing the last levels are", 0.5f, 5f, "0.0", Order = 1, RequireRestart = false,
-            HintText = "How hard the last stretch bites. 5 is the steepest this curve goes: the slide is 1.6 times vanilla-s and only 7% of your learning rate is left at 330. Vanilla is harsher still, but only by reaching exactly zero, which makes its last level cost infinity -- that is why 329 is vanilla-s true maximum and 330 is not. Lower is gentler: 2 leaves 22%, 0.5 leaves 30%. 330 stays within reach at every setting. Where skill 275 lands falls out of this; press Current status to see it.")]
+            HintText = "How hard the last stretch bites. 5 is the steepest this curve goes: the slide is 1.6 times vanilla-s and only 7% of your learning rate is left at 330. Vanilla is harsher still, but only by reaching exactly zero, which makes its last level cost infinity - that is why 329 is vanilla-s true maximum and 330 is not. Lower is gentler: 2 leaves 22%, 0.5 leaves 30%. 330 stays within reach at every setting. Where skill 275 lands falls out of this; press Current status to see it.")]
         [SettingPropertyGroup(Feel, GroupOrder = 2)]
         public float SummitHarshness { get; set; } = 2.5f;
 
@@ -269,7 +269,7 @@ namespace ProgressionExpanded
         // --- Attribute bonuses ---
 
         [SettingPropertyBool("Attribute bonuses", Order = 3, RequireRestart = false,
-            HintText = "Something each attribute buys the moment the point is spent, on top of the learning rate and ceiling it already gives -- three or four apiece, covering how hard you hit, how well you take a hit, how your clan does and how fast you learn. Each attribute lists its own on its card, which needs Character screen changes on.")]
+            HintText = "Something each attribute buys the moment the point is spent, on top of the learning rate and ceiling it already gives - three or four apiece, covering how hard you hit, how well you take a hit, how your clan does and how fast you learn. Each attribute lists its own on its card, which needs Character screen changes on.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool AttributeBonuses { get; set; } = true;
 
@@ -280,14 +280,14 @@ namespace ProgressionExpanded
         public float AttributeStrength { get; set; } = 1f;
 
         [SettingPropertyBool("Other heroes get them too", Order = 2, RequireRestart = false,
-            HintText = "On, an attribute pays whoever owns it -- your companions, and every lord in Calradia, the same as you. Off, only your own character benefits. Three of them are yours either way and are unaffected by this: battle loot, cheating death and crime rating are read off your character by construction. Intelligence's learning rate and limit are likewise unaffected, because the game asks for them without saying which hero is asking.")]
+            HintText = "On, an attribute pays whoever owns it - your companions, and every lord in Calradia, the same as you. Off, only your own character benefits. Three of them are yours either way and are unaffected by this: battle loot, cheating death and crime rating are read off your character by construction. Intelligence's learning rate and limit are likewise unaffected, because the game asks for them without saying which hero is asking.")]
         [SettingPropertyGroup(Attributes, GroupOrder = 5)]
         public bool BonusesForOthers { get; set; } = true;
 
         // --- Your children ---
 
         [SettingPropertyBool("Children are better than their parents", Order = 4, RequireRestart = false,
-            HintText = "Each generation of your clan learns faster, reaches higher and can specialise in more. What they are good at still comes from their own upbringing and their own campaign -- only the capacity is inherited. Nothing is capped, so a fifth-generation heir is genuinely remarkable.")]
+            HintText = "Each generation of your clan learns faster, reaches higher and can specialise in more. What they are good at still comes from their own upbringing and their own campaign - only the capacity is inherited. Nothing is capped, so a fifth-generation heir is genuinely remarkable.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool GenerationsImprove { get; set; } = true;
 
@@ -314,7 +314,7 @@ namespace ProgressionExpanded
         // --- Troubleshooting ---
 
         [SettingPropertyBool("Progression curve (needs restart)", Order = 1, RequireRestart = true,
-            HintText = "The XP curve, the learning rates and the ceilings -- the pacing half of the mod. Off, the game keeps vanilla progression and EVERYTHING ELSE HERE CARRIES ON: the attribute bonuses, the skill bonuses, the XP rates and your children's inheritance all still apply. This is the supported way to take the extras without the slower climb.")]
+            HintText = "The XP curve, the learning rates and the ceilings - the pacing half of the mod. Off, the game keeps vanilla progression and EVERYTHING ELSE HERE CARRIES ON: the attribute bonuses, the skill bonuses, the XP rates and your children's inheritance all still apply. This is the supported way to take the extras without the slower climb.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool UseCurve { get; set; } = true;
 
@@ -397,12 +397,12 @@ namespace ProgressionExpanded
         internal float PenaltySlope => 0.05f + 0.0125f * HarshSteps;
 
         /// <summary>
-        /// Share of the learning rate still alive at the cap. Never zero -- an exact wall makes the
-        /// last level cost a whole career -- but low enough that pushing past 330 costs several.
+        /// Share of the learning rate still alive at the cap. Never zero - an exact wall makes the
+        /// last level cost a whole career - but low enough that pushing past 330 costs several.
         /// </summary>
         /// <summary>
         /// How much learning rate is left at the cap. The harsh end is pushed right down onto the
-        /// floor the smoothing imposes, so 5 really is the steepest this curve has -- vanilla is
+        /// floor the smoothing imposes, so 5 really is the steepest this curve has - vanilla is
         /// harsher still, but only by reaching exactly zero, which is what makes its last level
         /// cost infinity and the reason 329 is vanilla's true maximum.
         /// </summary>
@@ -423,7 +423,7 @@ namespace ProgressionExpanded
         /// <c>_lookup ??= new Dictionary(...)</c> looks harmless and is not. This is reached from
         /// the XP prefix, which the save loader drives across several threads at once: one thread
         /// can be filling the dictionary while another reads it, and a Dictionary torn that way
-        /// does not throw -- it loops forever inside its own bucket walk. That presents as the
+        /// does not throw - it loops forever inside its own bucket walk. That presents as the
         /// game freezing with no exception and no stack, which is exactly what the crash dumps
         /// showed.
         /// </remarks>
@@ -432,7 +432,7 @@ namespace ProgressionExpanded
 
         /// <summary>
         /// Naval skills are matched by string id rather than a reference, so this still builds and
-        /// runs without the naval content installed -- those ids simply never turn up.
+        /// runs without the naval content installed - those ids simply never turn up.
         /// </summary>
         public float MultiplierFor(SkillObject skill)
         {

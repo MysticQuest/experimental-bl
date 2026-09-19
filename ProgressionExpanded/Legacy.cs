@@ -23,7 +23,7 @@ namespace ProgressionExpanded
         private const int MaxWalk = 24;
         /// <summary>
         /// Concurrent because party AI is stepped on several threads, and a plain dictionary
-        /// written from two of them at once corrupts its buckets -- which shows up as a crash to
+        /// written from two of them at once corrupts its buckets - which shows up as a crash to
         /// desktop with no managed trace, not as an exception anyone can catch.
         /// </summary>
         private static readonly ConcurrentDictionary<Hero, int> Cache = new ConcurrentDictionary<Hero, int>();
