@@ -189,9 +189,16 @@ namespace ProgressionExpanded
         }
 
         /// <summary>
+        /// Back to the sack and nothing else, for a tutorial that was never played.
+        /// </summary>
+        internal void Bare() => Rekit(false);
+
+        /// <summary>
         /// Strips the sets again and hands back a knife and a pair of shoes.
         /// </summary>
-        internal void Rekit()
+        internal void Rekit() => Rekit(true);
+
+        private void Rekit(bool earned)
         {
             var hero = Hero.MainHero;
             if (hero == null) return;
@@ -205,16 +212,18 @@ namespace ProgressionExpanded
             Undress(hero.CivilianEquipment, cloth, null);
             Undress(hero.StealthEquipment, cloth, null);
 
-            foreach (var set in new[] { hero.BattleEquipment, hero.CivilianEquipment, hero.StealthEquipment })
-            {
-                if (set == null) continue;
-                if (shoes != null) set[EquipmentIndex.Leg] = new EquipmentElement(shoes);
-                if (knife != null) set[EquipmentIndex.Weapon1] = new EquipmentElement(knife);
-            }
+            if (earned)
+                foreach (var set in new[] { hero.BattleEquipment, hero.CivilianEquipment, hero.StealthEquipment })
+                {
+                    if (set == null) continue;
+                    if (shoes != null) set[EquipmentIndex.Leg] = new EquipmentElement(shoes);
+                    if (knife != null) set[EquipmentIndex.Weapon1] = new EquipmentElement(knife);
+                }
 
             SweepInventory();
-            Log.Write($"Burlap sack: tutorial reward trimmed to {knife?.Name} (tier {knife?.Tier}) "
-                      + $"and {shoes?.Name} (tier {shoes?.Tier})");
+            Log.Write(earned
+                ? $"Burlap sack: villagers gave {knife?.Name} (tier {knife?.Tier}) and {shoes?.Name} (tier {shoes?.Tier})"
+                : "Burlap sack: tutorial skipped, so the sack is all there is");
         }
 
         private static ItemObject? Item(string id) => MBObjectManager.Instance?.GetObject<ItemObject>(id);
@@ -304,7 +313,16 @@ namespace ProgressionExpanded
                 var settings = Settings.Instance;
                 if (!Mod.On || settings == null || !settings.StartWithNothing) return;
 
-                DestituteStartBehavior.Current?.Rekit();
+                // The same method restores the player's own gear whether the tutorial was
+                // played or skipped, and skipping it runs this during campaign creation. The
+                // opening window is what tells the two apart: the real tutorial takes days, and
+                // the window shuts an hour in, so a call arriving while it is still open cannot
+                // be a tutorial anyone played.
+                var behaviour = DestituteStartBehavior.Current;
+                if (behaviour == null) return;
+
+                if (behaviour.WindowOpen) behaviour.Bare();
+                else behaviour.Rekit();
             }
             catch (Exception exception)
             {
