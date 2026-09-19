@@ -11,7 +11,7 @@
         <ItemId Value="0000000000"/>
     </GetItem>
     <UpdateItem>
-        <ModuleFolder Value="X:\Repositories\Mods\publish\Modules\ProgressionExpanded"/>
+        <ModuleFolder Value="X:\Repositories\Steam Mods\publish\Modules\ProgressionExpanded"/>
         <ChangeNotes Value="Attribute cards now show what each point buys, on the character screen and during character creation."/>
         <Tags>
             <Tag Value="Utility" />
