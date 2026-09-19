@@ -143,7 +143,7 @@ namespace ProgressionExpanded
             // thing left that an agent reads while it is being built -- and it returns a struct
             // by ref, which is the shape most likely to be mis-wrapped.
             "VigorHitPointsPatch", "AttributeCardPatch", "CharacterCreationAttributeCardPatch",
-            "ControlStaggerPatch"
+            "ControlStaggerPatch", "VigorMomentumPatch", "VigorKnockbackPatch"
         };
 
         private static void ApplyPatches(Harmony harmony)

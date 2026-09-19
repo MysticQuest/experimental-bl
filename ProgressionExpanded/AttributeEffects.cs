@@ -81,20 +81,21 @@ namespace ProgressionExpanded
                 return new[]
                 {
                     new Effect("hit points", AttributeBonus.VigorHitPoints),
+                    new Effect("swing carried through a hit", AttributeBonus.VigorMomentum, percent: true),
+                    new Effect("chance to knock a man back", AttributeBonus.VigorKnockback, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Control)
                 return new[]
                 {
                     new Effect("weapon handling", AttributeBonus.ControlHandling, percent: true),
-                    new Effect("damage resistance", AttributeBonus.ControlResistance, percent: true),
                     new Effect("stagger resistance", AttributeBonus.ControlStagger, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Endurance)
                 return new[]
                 {
-                    new Effect("hit points", AttributeBonus.EnduranceHitPoints),
+                    new Effect("damage resistance", AttributeBonus.EnduranceResistance, percent: true),
                     new Effect("mount speed", AttributeBonus.EnduranceMountSpeed, percent: true),
                     new Effect("running speed", AttributeBonus.EnduranceRunSpeed, percent: true),
                     new Effect("smithing stamina", AttributeBonus.EnduranceStamina),
