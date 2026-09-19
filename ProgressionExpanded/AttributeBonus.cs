@@ -50,6 +50,7 @@ namespace ProgressionExpanded
         /// </remarks>
         internal const float BaseKnockBackResistance = 0.15f;
         internal const float CunningBattleLoot = 0.02f;    // share of battle loot
+        internal const float CunningCheatDeath = 0.02f;    // share of lethal blows survived
         internal const int SocialPointsPerCompanion = 5;   // one companion per five points
         internal const float IntelligenceLearning = 0.01f; // learning rate, every skill
         internal const float IntelligenceCeiling = 1f;     // learning limit, every skill
@@ -427,6 +428,46 @@ namespace ProgressionExpanded
             catch
             {
                 // Never throw mid-blow.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Cunning is also knowing when to lie very still.
+    /// </summary>
+    /// <remarks>
+    /// The game decides a downed hero's fate with a survival roll. This does not raise that
+    /// chance directly -- it takes a share of what is left of it, so the figure on the card means
+    /// what it says: at Cunning 10, one lethal blow in five turns out not to have been. A hero
+    /// already certain to live gains nothing, and the roll can never be pushed past certainty.
+    ///
+    /// You only. Handing it to every lord in Calradia would quietly stop the world's nobility
+    /// dying, which is a change to the whole campaign rather than a bonus on your card.
+    /// </remarks>
+    [HarmonyPatch(typeof(DefaultPartyHealingModel), nameof(DefaultPartyHealingModel.GetSurvivalChance))]
+    internal static class CunningCheatDeathPatch
+    {
+        [HarmonyPostfix]
+        private static void Duck(CharacterObject character, ref float __result)
+        {
+            Guard.Touch("CheatDeath");
+
+            try
+            {
+                if (!AttributeBonus.Active() || __result >= 1f) return;
+
+                var hero = character?.HeroObject;
+                if (hero == null || hero != Hero.MainHero) return;
+
+                var cunning = AttributeBonus.Of(hero, DefaultCharacterAttributes.Cunning);
+                if (cunning <= 0) return;
+
+                var saved = AttributeBonus.CunningCheatDeath * cunning;
+                __result += (1f - __result) * Math.Min(1f, saved);
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("CheatDeath", exception);
             }
         }
     }

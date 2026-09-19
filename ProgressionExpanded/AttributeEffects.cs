@@ -121,6 +121,7 @@ namespace ProgressionExpanded
                 return new[]
                 {
                     new Effect("share of battle loot", AttributeBonus.CunningBattleLoot, percent: true),
+                    new Effect("chance to cheat death", AttributeBonus.CunningCheatDeath, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Social)
