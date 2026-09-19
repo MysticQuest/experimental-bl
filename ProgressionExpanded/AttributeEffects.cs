@@ -88,6 +88,7 @@ namespace ProgressionExpanded
                 {
                     new Effect("weapon handling", AttributeBonus.ControlHandling, percent: true),
                     new Effect("damage resistance", AttributeBonus.ControlResistance, percent: true),
+                    new Effect("stagger resistance", AttributeBonus.ControlStagger, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Endurance)

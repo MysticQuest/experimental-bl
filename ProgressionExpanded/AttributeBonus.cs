@@ -30,6 +30,7 @@ namespace ProgressionExpanded
         internal const int VigorHitPoints = 2;             // hit points
         internal const float ControlHandling = 0.01f;      // weapon handling
         internal const float ControlResistance = 0.01f;    // damage taken
+        internal const float ControlStagger = 0.01f;       // damage needed to stagger you
         internal const float EnduranceMountSpeed = 0.01f;  // horse speed
         internal const float EnduranceRunSpeed = 0.01f;    // running speed
         internal const int EnduranceStamina = 5;           // smithing stamina
@@ -178,6 +179,41 @@ namespace ProgressionExpanded
             catch
             {
                 // This runs every frame per agent; a throw here is far worse than a missing bonus.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Control is also what keeps you on your feet when something lands.
+    /// </summary>
+    /// <remarks>
+    /// The model returns the damage a blow must do to stagger the defender, so raising it is
+    /// resistance: the same hit that used to interrupt your swing no longer does. It is the
+    /// defender-side counterpart to the handling bonus -- one keeps the weapon steady between
+    /// swings, the other keeps it steady through one.
+    ///
+    /// The <c>in</c> parameter is declared <c>ref</c> because that is the shape Harmony matches.
+    /// </remarks>
+    [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
+        nameof(SandboxAgentApplyDamageModel.CalculateStaggerThresholdDamage))]
+    internal static class ControlStaggerPatch
+    {
+        [HarmonyPostfix]
+        private static void Steady(Agent defenderAgent, ref float __result)
+        {
+            Guard.Touch("StaggerThreshold");
+
+            try
+            {
+                if (!AttributeBonus.Active() || defenderAgent == null) return;
+
+                var hero = AttributeBonus.HeroOf(defenderAgent);
+                var control = AttributeBonus.Of(hero, DefaultCharacterAttributes.Control);
+                if (control > 0) __result *= 1f + AttributeBonus.ControlStagger * control;
+            }
+            catch
+            {
+                // Runs for every blow landed in a battle; a missing bonus beats a thrown exception.
             }
         }
     }
