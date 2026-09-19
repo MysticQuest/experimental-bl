@@ -97,6 +97,7 @@ namespace ProgressionExpanded
                     new Effect("hit points", AttributeBonus.VigorHitPoints),
                     new Effect("swing momentum through enemies", AttributeBonus.VigorMomentum, percent: true),
                     new Effect("chance to knock enemies back", AttributeBonus.VigorKnockback, percent: true),
+                    new Effect("resistance to illness", AttributeBonus.VigorIllness, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Control)
