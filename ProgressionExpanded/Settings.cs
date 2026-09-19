@@ -385,6 +385,11 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
+        [SettingPropertyButton("Complete active quests", Content = "Complete", Order = 12, RequireRestart = false,
+            HintText = "Succeeds every quest you are holding, exactly as finishing it would, so a mission's reward can be seen without playing the mission. With debug tools on, the log names what each one paid into your packs.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
+        public Action CompleteQuests { get; set; } = TutorialShortcut.Succeed;
+
         [SettingPropertyButton("Finish the tutorial", Content = "Finish", Order = 11, RequireRestart = false,
             HintText = "Ends the village stealth tutorial where you stand, exactly as finishing it would. For testing what the villagers hand over without playing it through each time.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]

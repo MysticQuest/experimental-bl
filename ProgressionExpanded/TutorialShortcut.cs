@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using TaleWorlds.CampaignSystem;
 using HarmonyLib;
 using TaleWorlds.Library;
 
@@ -21,6 +23,52 @@ namespace ProgressionExpanded
     internal static class TutorialShortcut
     {
         internal static readonly Action Finish = Run;
+        internal static readonly Action Succeed = CompleteQuests;
+
+        /// <summary>
+        /// Completes every quest the player currently holds, successfully.
+        /// </summary>
+        /// <remarks>
+        /// The village mission takes several minutes to play and the only interesting second is
+        /// the one where it pays out. This drives the same completion the mission itself calls, so
+        /// whatever a quest hands over on success is handed over now, probe and all.
+        ///
+        /// Every active quest, not a chosen one: the quest worth testing is rarely the only one
+        /// running, and picking through them by name is a worse tool than finishing the lot on a
+        /// test campaign.
+        /// </remarks>
+        private static void CompleteQuests()
+        {
+            try
+            {
+                var manager = Campaign.Current?.QuestManager;
+                if (manager == null) { Say("No campaign, so no quests."); return; }
+
+                var quests = new List<QuestBase>();
+                foreach (var quest in manager.Quests)
+                    if (quest != null && !quest.IsFinalized) quests.Add(quest);
+
+                if (quests.Count == 0) { Say("No active quests to complete."); return; }
+
+                foreach (var quest in quests)
+                {
+                    Log.Write("Debug: completing quest " + quest.GetType().Name + " - " + quest.Title);
+                    quest.CompleteQuestWithSuccess();
+                }
+
+                Say($"Completed {quests.Count} quest(s). The log lists what they paid.");
+            }
+            catch (TargetInvocationException invocation)
+            {
+                Guard.Report("CompleteQuests", invocation.InnerException ?? invocation);
+                Say("A quest refused to complete; see the mod log.");
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("CompleteQuests", exception);
+                Say("Could not complete the quests; see the mod log.");
+            }
+        }
 
         private static void Run()
         {
