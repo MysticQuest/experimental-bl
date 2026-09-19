@@ -37,6 +37,8 @@ namespace ProgressionExpanded
         internal const float CunningBattleLoot = 0.02f;    // share of battle loot
         internal const int SocialPointsPerCompanion = 5;   // one companion per five points
         internal const float IntelligenceLearning = 0.01f; // learning rate, every skill
+        internal const float IntelligenceCeiling = 1f;     // learning limit, every skill
+        internal const float SocialClanLearning = 0.01f;   // skill XP for the rest of your clan
 
         internal static bool Active()
         {
@@ -55,6 +57,37 @@ namespace ProgressionExpanded
             catch
             {
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// What your Social is worth to someone else in your clan, as a multiplier on their skill XP.
+        /// </summary>
+        /// <remarks>
+        /// Every other bonus here pays the hero who owns the attribute. This one pays everyone
+        /// except them: companions, spouse and children learn faster because of your Social, and
+        /// your own skills are untouched by it. It suits the attribute -- Social is the one that
+        /// governs nothing you do alone -- and it pairs with the companion limit, which decides
+        /// how many of them there are rather than how good they get.
+        ///
+        /// Player clan only. A clan-wide learning multiplier handed to every AI lord in Calradia
+        /// would change the pace of the whole campaign, invisibly.
+        /// </remarks>
+        internal static float ClanLearningBonus(Hero? hero)
+        {
+            try
+            {
+                if (!Active() || hero == null || Campaign.Current == null) return 1f;
+
+                var you = Hero.MainHero;
+                if (you == null || hero == you || hero.Clan != you.Clan) return 1f;
+
+                var social = Of(you, DefaultCharacterAttributes.Social);
+                return social <= 0 ? 1f : 1f + SocialClanLearning * social;
+            }
+            catch
+            {
+                return 1f;
             }
         }
 

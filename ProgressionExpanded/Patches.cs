@@ -200,7 +200,9 @@ namespace ProgressionExpanded
                 var settings = Settings.Instance;
                 if (!Mod.On || settings == null || skill == null || rawXp <= 0f) return;
                 if (DebugTools.GrantingLevels) return;
-                rawXp *= settings.MultiplierFor(skill) * Legacy.LearningBonus(__instance?.Hero);
+                rawXp *= settings.MultiplierFor(skill)
+                         * Legacy.LearningBonus(__instance?.Hero)
+                         * AttributeBonus.ClanLearningBonus(__instance?.Hero);
         
                         }
             catch (Exception exception)
