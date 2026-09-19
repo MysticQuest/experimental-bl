@@ -123,6 +123,7 @@ namespace ProgressionExpanded
                 {
                     new Effect("share of battle loot", AttributeBonus.CunningBattleLoot, percent: true),
                     new Effect("chance to cheat death", AttributeBonus.CunningCheatDeath, percent: true),
+                    new Effect("faster crime rating decay", AttributeBonus.CunningCrimeDecay, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Social)
