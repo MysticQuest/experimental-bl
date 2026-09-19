@@ -40,8 +40,30 @@ namespace ProgressionExpanded
         /// <summary>The one thing kept back, so the first days are hard rather than fatal.</summary>
         private const string Grain = "grain";
 
+        /// <summary>Plain Empire townsfolk kit: a knife and a pair of town boots.</summary>
+        private const string Knife = "gladius_b";
+        private const string Boots = "folded_town_boots";
+
         /// <summary>
-        /// The feeblest Empire dagger and the feeblest Empire leg armour the game has loaded.
+        /// The kit, by name, with a filtered search only as a fallback.
+        /// </summary>
+        /// <remarks>
+        /// Sorting every loaded item by tier was a bad way to choose. It handed over
+        /// dagger_golden_claw - a named quest piece - and dp_fine_town_boots_l, which belongs to
+        /// another mod entirely: tier says how strong a thing is, not whether it is the sort of
+        /// object a villager would have lying about.
+        ///
+        /// So the two are named. Both are vanilla Empire items and both are deliberately dull:
+        /// gladius_b is the one blade in the game called simply Knife, and folded_town_boots are
+        /// what an Imperial townsman wears. The search survives only for the case where a name
+        /// stops resolving, and it now refuses anything a merchant would not stock, anything the
+        /// player crafted, and anything worth nothing - which is what excludes the debug pieces.
+        /// </remarks>
+        private static ItemObject? Kit(string id, ItemObject.ItemTypeEnum kind) =>
+            MBObjectManager.Instance?.GetObject<ItemObject>(id) ?? Feeblest(kind);
+
+        /// <summary>
+        /// The feeblest ordinary Empire item of a kind, for when the named one is missing.
         /// </summary>
         /// <remarks>
         /// Picked by walking the item list rather than by naming ids. Tier is computed from an
@@ -59,6 +81,7 @@ namespace ProgressionExpanded
             {
                 if (item == null || item.ItemType != kind) continue;
                 if (item.Culture?.StringId != "empire") continue;
+                if (item.NotMerchandise || item.IsCraftedByPlayer || item.Value <= 0) continue;
                 if (kind == ItemObject.ItemTypeEnum.OneHandedWeapon
                     && item.PrimaryWeapon?.WeaponClass != WeaponClass.Dagger) continue;
 
@@ -140,8 +163,8 @@ namespace ProgressionExpanded
             var roster = MobileParty.MainParty?.ItemRoster;
             if (roster == null) return;
 
-            var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
-            var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
+            var knife = Kit(Knife, ItemObject.ItemTypeEnum.OneHandedWeapon);
+            var shoes = Kit(Boots, ItemObject.ItemTypeEnum.LegArmor);
             if (knife != null) roster.AddToCounts(knife, 1);
             if (shoes != null) roster.AddToCounts(shoes, 1);
 
@@ -340,8 +363,8 @@ namespace ProgressionExpanded
 
             var cloth = Item(Cloth);
             var pebbles = Item(Pebbles);
-            var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
-            var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
+            var knife = Kit(Knife, ItemObject.ItemTypeEnum.OneHandedWeapon);
+            var shoes = Kit(Boots, ItemObject.ItemTypeEnum.LegArmor);
 
             Undress(hero.BattleEquipment, cloth, pebbles);
             Undress(hero.CivilianEquipment, cloth, null);
