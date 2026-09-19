@@ -53,8 +53,13 @@ namespace ProgressionExpanded
             /// Kept to one printed line each. The card draws this block below the bound-skill
             /// icons but sizes it from the middle, so a line that wraps grows the block upward
             /// and over the icon captions -- which is exactly what a sentence like "faster
-            /// recovery after a block, and longer for whoever you blocked" did. Names are short
-            /// enough to survive that, and the rate is abbreviated rather than spelled out.
+            /// recovery after a block, and longer for whoever you blocked" did.
+            ///
+            /// The budget is roughly fifty characters for the whole line, which is a good deal
+            /// more than one word. Names are written to be understood by someone who has never
+            /// read the settings -- "resistance to knocks and dismounts", not "footing" -- and
+            /// only the rate is abbreviated, because the bracket repeats on every line and its
+            /// meaning is obvious from the total in front of it.
             /// </remarks>
             internal string At(int value) => $"+{Amount(_perPoint * value, Whole)} {_name} ({Rate})";
 
@@ -90,17 +95,17 @@ namespace ProgressionExpanded
                 return new[]
                 {
                     new Effect("hit points", AttributeBonus.VigorHitPoints),
-                    new Effect("swing momentum", AttributeBonus.VigorMomentum, percent: true),
-                    new Effect("knockback", AttributeBonus.VigorKnockback, percent: true),
+                    new Effect("swing momentum through enemies", AttributeBonus.VigorMomentum, percent: true),
+                    new Effect("chance to knock enemies back", AttributeBonus.VigorKnockback, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Control)
                 return new[]
                 {
-                    new Effect("handling", AttributeBonus.ControlHandling, percent: true),
+                    new Effect("weapon handling", AttributeBonus.ControlHandling, percent: true),
                     new Effect("stagger resistance", AttributeBonus.ControlStagger, percent: true),
-                    new Effect("block recovery", AttributeBonus.ControlGuard, percent: true),
-                    new Effect("footing", AttributeBonus.ControlFooting, percent: true),
+                    new Effect("faster recovery after blocking", AttributeBonus.ControlGuard, percent: true),
+                    new Effect("resistance to knocks and dismounts", AttributeBonus.ControlFooting, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Endurance)
@@ -115,7 +120,7 @@ namespace ProgressionExpanded
             if (attribute == DefaultCharacterAttributes.Cunning)
                 return new[]
                 {
-                    new Effect("battle loot", AttributeBonus.CunningBattleLoot, percent: true),
+                    new Effect("share of battle loot", AttributeBonus.CunningBattleLoot, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Social)
@@ -123,14 +128,14 @@ namespace ProgressionExpanded
                 {
                     new Effect("companion limit", 1f / AttributeBonus.SocialPointsPerCompanion,
                         pointsPerUnit: AttributeBonus.SocialPointsPerCompanion),
-                    new Effect("clan skill XP", AttributeBonus.SocialClanLearning, percent: true),
+                    new Effect("skill XP for the rest of your clan", AttributeBonus.SocialClanLearning, percent: true),
                 };
 
             if (attribute == DefaultCharacterAttributes.Intelligence)
                 return new[]
                 {
-                    new Effect("learning rate, all skills", AttributeBonus.IntelligenceLearning, percent: true),
-                    new Effect("learning limit, all skills", AttributeBonus.IntelligenceCeiling),
+                    new Effect("learning rate on every skill", AttributeBonus.IntelligenceLearning, percent: true),
+                    new Effect("learning limit on every skill", AttributeBonus.IntelligenceCeiling),
                 };
 
             return None;
