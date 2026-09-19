@@ -49,6 +49,10 @@ namespace ProgressionExpanded
             Probe.Count("LearningLimit", focusValue);
             var result = new ExplainedNumber(0f, includeDescriptions, null);
             result.Add(Curve.LimitValue(AverageAttribute(characterAttributes, skill), focusValue), AttributeText, null);
+
+            var ceiling = IntelligenceCeiling(characterAttributes);
+            if (ceiling > 0f) result.Add(ceiling, includeDescriptions ? IntelligenceText : null, null);
+
             result.LimitMin(0f);
             return result;
         }
@@ -72,7 +76,10 @@ namespace ProgressionExpanded
             // Vanilla's own shape: a linear slide once past the limit. The only differences are a
             // gentler slope and a floor, so the rate approaches zero without ever arriving.
             var baseFactor = Curve.BaseFactor(attribute, focusValue);
-            var limit = Curve.LimitValue(attribute, focusValue);
+
+            // The same addition the limit itself gets, or the screen would promise a ceiling the
+            // penalty had already started eating into.
+            var limit = Curve.LimitValue(attribute, focusValue) + IntelligenceCeiling(characterAttributes);
             if (skillValue > limit)
             {
                 var penalty = 1f + slope * (skillValue - limit);
@@ -100,6 +107,23 @@ namespace ProgressionExpanded
 
             result.LimitMin(1.25f * Curve.RateFloor);
             return result;
+        }
+
+        /// <summary>
+        /// Skill levels Intelligence adds to every learning limit, which moves the ceiling itself.
+        /// </summary>
+        /// <remarks>
+        /// The rate bonus pays while a skill is still climbing and is worth nothing once it has
+        /// stalled; this one is worth nothing early and everything late. Together they are what
+        /// makes Intelligence the attribute of the long game rather than a smaller copy of the
+        /// bound-attribute bonus it already grants three skills.
+        /// </remarks>
+        private static float IntelligenceCeiling(IReadOnlyPropertyOwner<CharacterAttribute> attributes)
+        {
+            if (attributes == null || !AttributeBonus.Active()) return 0f;
+
+            var intelligence = attributes.GetPropertyValue(DefaultCharacterAttributes.Intelligence);
+            return intelligence <= 0f ? 0f : AttributeBonus.IntelligenceCeiling * intelligence;
         }
 
         private static float AverageAttribute(IReadOnlyPropertyOwner<CharacterAttribute> attributes, SkillObject skill)
