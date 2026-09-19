@@ -34,9 +34,9 @@ namespace ProgressionExpanded
         /// vanilla's five focus points at a flat price, and its steep wall at the top -- while
         /// leaving both bonus groups switched on.
         /// </remarks>
-        [SettingPropertyButton("Changing things mid-campaign", Content = "Read", Order = 6,
+        [SettingPropertyButton("Information", Content = "Read", Order = 6,
             RequireRestart = false,
-            HintText = "Which settings take hold at once, which need the campaign reloaded, and what happens to the skills you have already earned. Worth reading once before changing anything in a campaign you care about.")]
+            HintText = "What this mod is and how finished it is, plus which settings take hold at once, which need the campaign reloaded, and what may happen to skills you have already earned. Worth a read before changing anything in a campaign you care about.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public Action MidCampaignNote { get; set; } = Guidance.MidCampaign;
 
@@ -323,9 +323,9 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(Trouble, GroupOrder = 7)]
         public bool RepairSkillXp { get; set; } = true;
 
-        [SettingPropertyBool("Character screen changes (needs restart)", Order = 5, RequireRestart = true,
+        [SettingPropertyBool("Character screen changes (needs restart)", Order = 2, RequireRestart = true,
             HintText = "The focus pip row. This is the only part of the mod that edits the game's UI layout, and the only part that cannot be undone without a restart.")]
-        [SettingPropertyGroup(Features, GroupOrder = 0)]
+        [SettingPropertyGroup(Trouble, GroupOrder = 7)]
         public bool UiChanges { get; set; } = true;
 
         [SettingPropertyBool("Battle and mission changes (needs restart)", Order = 3, RequireRestart = true,
