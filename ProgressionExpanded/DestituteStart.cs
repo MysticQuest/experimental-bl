@@ -140,9 +140,10 @@ namespace ProgressionExpanded
         /// battle at the end of the stealth mission in Tevea, handed over by
         /// HideoutCampaignBehavior.OnCollectLootItems.
         ///
-        /// Emptying the roster it was given is enough: the game adds the kit to it afterwards, so
-        /// the loot screen still appears and still has something in it, which keeps the moment
-        /// intact rather than silently skipping it.
+        /// Emptying the roster it was given is enough. Whatever is in that roster is what reaches
+        /// the player, with or without a screen to show it - the tutorial hideout hands its
+        /// spoils straight into the packs - so putting the kit into the same roster means the kit
+        /// is what arrives, by the same route the set did.
         /// </remarks>
         internal void TakeTheHideoutsSpoils(ItemRoster? loot)
         {
