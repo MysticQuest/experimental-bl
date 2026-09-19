@@ -128,41 +128,25 @@ namespace ProgressionExpanded
         }
 
         /// <summary>
-        /// Takes back the gift the villagers just made, and leaves the kit instead.
+        /// Hands over the kit in place of the set the villagers meant to give.
         /// </summary>
         /// <remarks>
-        /// Removes exactly the items in the named equipment set, one for one, rather than
-        /// anything else in the packs - so a player who arrived carrying something keeps it.
+        /// Called once the reward has been suppressed rather than after it has been undone, so
+        /// nothing ever enters the packs to be taken out again: no flicker in the inventory, and
+        /// no dependence on a removal finding what it expected.
         /// </remarks>
-        internal void TakeTheVillagersGift(string setId)
+        internal void GiveTheKitInstead(List<string> refused)
         {
-            if (!Mod.On || !(Settings.Instance?.StartWithNothing ?? false)) return;
-
             var roster = MobileParty.MainParty?.ItemRoster;
-            var gift = MBObjectManager.Instance?.GetObject<MBEquipmentRoster>(setId);
-            if (roster == null || gift == null) return;
-
-            var taken = new List<string>();
-            var kit = gift.DefaultEquipment;
-
-            for (var slot = EquipmentIndex.WeaponItemBeginSlot; slot < EquipmentIndex.NumEquipmentSetSlots; slot++)
-            {
-                var element = kit[slot];
-                if (element.IsEmpty || element.Item == null) continue;
-
-                roster.AddToCounts(element.Item, -1);
-                taken.Add(element.Item.StringId);
-            }
-
-            if (taken.Count == 0) return;
+            if (roster == null) return;
 
             var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
             var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
             if (knife != null) roster.AddToCounts(knife, 1);
             if (shoes != null) roster.AddToCounts(shoes, 1);
 
-            Log.Write("Burlap sack: villagers offered " + string.Join(", ", taken.ToArray())
-                      + $"; left {knife?.StringId} (tier {knife?.Tier}) and {shoes?.StringId} (tier {shoes?.Tier})");
+            Log.Write("Burlap sack: villagers meant to give " + string.Join(", ", refused.ToArray())
+                      + $"; gave {knife?.StringId} (tier {knife?.Tier}) and {shoes?.StringId} (tier {shoes?.Tier})");
         }
 
         /// <summary>Whether the sack still has to be kept on by force.</summary>
@@ -521,23 +505,26 @@ namespace ProgressionExpanded
     /// Replaces the set the villagers hand over with a knife and a pair of boots.
     /// </summary>
     /// <remarks>
-    /// This is it, found at last by looking up the dialogue line rather than by guessing at
-    /// mechanisms. Rescue the headman and VillagersInNeed.OnCompleteWithSuccess loads the
-    /// equipment roster named stealth_tutorial_set_player and tips every filled slot of it into
-    /// the player's packs: a seax, a falchion, throwing stones and the rest.
+    /// Found by looking up the dialogue line rather than by guessing: "I'll take it. I need
+    /// whatever I can get." is string gLVaQeAL, declared in VillagersInNeed.SetDialogs, and
+    /// VillagersInNeed.OnCompleteWithSuccess loads the equipment roster named
+    /// stealth_tutorial_set_player and tips every filled slot of it into the player's packs.
     ///
-    /// No loot screen, no battle resolution, no quest reward API - which is why hooks written
-    /// against fights, loot events and quest completion all reached their sites and changed
-    /// nothing, and why watching the packs for any arrival at all was a bad answer: it would have
-    /// robbed a player who had picked something up first.
+    /// The reward is refused rather than removed. While the quest's own method runs, additions
+    /// to the player's packs are turned away one by one, and the kit is put in afterwards - so
+    /// nothing ever lands to be taken out again. Undoing it would have worked, but it leaves a
+    /// moment where the player owns a full set, and it depends on the removal finding exactly
+    /// what it expected to find.
     ///
-    /// Knowing the exact set means exactly those items can be taken back, and nothing else.
+    /// Only that method's additions are refused, and only while it is running on the main party.
     /// </remarks>
     [HarmonyPatch]
     internal static class VillagersRewardPatch
     {
         private const string Quest = "StoryMode.Quests.TutorialPhase.VillagersInNeed";
-        private const string Set = "stealth_tutorial_set_player";
+
+        private static bool _refusing;
+        private static readonly List<string> Refused = new List<string>();
 
         private static bool Prepare() => Target() != null;
 
@@ -546,18 +533,62 @@ namespace ProgressionExpanded
 
         private static MethodBase TargetMethod() => Target()!;
 
-        [HarmonyPostfix]
-        private static void Trim()
+        [HarmonyPrefix]
+        private static void Refuse()
         {
             Guard.Touch("VillagersReward");
 
+            _refusing = Mod.On && (Settings.Instance?.StartWithNothing ?? false);
+            Refused.Clear();
+        }
+
+        [HarmonyPostfix]
+        private static void Replace()
+        {
+            if (!_refusing) return;
+            _refusing = false;
+
             try
             {
-                DestituteStartBehavior.Current?.TakeTheVillagersGift(Set);
+                if (Refused.Count > 0) DestituteStartBehavior.Current?.GiveTheKitInstead(Refused);
             }
             catch (Exception exception)
             {
                 Guard.Report("VillagersReward", exception);
+            }
+        }
+
+        /// <summary>Turns away each item the quest tries to hand over, and notes what it was.</summary>
+        internal static bool Turning(ItemRoster roster, ItemObject? item)
+        {
+            if (!_refusing || item == null) return false;
+            if (roster != MobileParty.MainParty?.ItemRoster) return false;
+
+            Refused.Add(item.StringId);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// The one place an item can be refused before it reaches the packs.
+    /// </summary>
+    [HarmonyPatch(typeof(ItemRoster), nameof(ItemRoster.AddToCounts), new[] { typeof(ItemObject), typeof(int) })]
+    internal static class RefuseItemPatch
+    {
+        [HarmonyPrefix]
+        private static bool Decline(ItemRoster __instance, ItemObject item, int number, ref int __result)
+        {
+            try
+            {
+                if (number <= 0 || !VillagersRewardPatch.Turning(__instance, item)) return true;
+
+                __result = 0;
+                return false;
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("RefuseItem", exception);
+                return true;
             }
         }
     }
