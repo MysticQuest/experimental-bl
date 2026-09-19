@@ -30,6 +30,7 @@ namespace ProgressionExpanded
         internal const int VigorHitPoints = 2;             // hit points
         internal const float VigorMomentum = 0.01f;        // swing carried through a hit
         internal const float VigorKnockback = 0.01f;       // knockback, as a share of the base
+        internal const float VigorIllness = 0.01f;         // share off the death-by-illness roll
         internal const float ControlHandling = 0.01f;      // weapon handling
         internal const float ControlStagger = 0.01f;       // damage needed to stagger you
         internal const float ControlGuard = 0.01f;         // recovery after a block, both ways
@@ -428,6 +429,42 @@ namespace ProgressionExpanded
             catch
             {
                 // Never throw mid-blow.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Vigor is what carries an old body through a bad winter.
+    /// </summary>
+    /// <remarks>
+    /// Vanilla has no plague, but it does have this: past the age the game calls old, every hero
+    /// is rolled against <c>ProbabilityOfDeath</c>, and losing that roll is what the game reports
+    /// as dying of illness. Vigor shortens the odds by 1% a point.
+    ///
+    /// Applied to every hero rather than to you alone, because Vigor's hit points already are,
+    /// and because a constitution that only the player has is a strange kind of constitution.
+    /// A tenth off the roll is small enough not to change how often Calradia buries its lords.
+    ///
+    /// The getter is read often, so the body does nothing but multiply.
+    /// </remarks>
+    [HarmonyPatch(typeof(Hero), nameof(Hero.ProbabilityOfDeath), MethodType.Getter)]
+    internal static class VigorIllnessPatch
+    {
+        [HarmonyPostfix]
+        private static void Endure(Hero __instance, ref float __result)
+        {
+            Guard.Touch("Illness");
+
+            try
+            {
+                if (__result <= 0f || !AttributeBonus.Active()) return;
+
+                var vigor = AttributeBonus.Of(__instance, DefaultCharacterAttributes.Vigor);
+                if (vigor > 0) __result *= Math.Max(0f, 1f - AttributeBonus.VigorIllness * vigor);
+            }
+            catch
+            {
+                // Read on every aging tick for every hero alive; never throw here.
             }
         }
     }
