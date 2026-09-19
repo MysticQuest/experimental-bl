@@ -18,8 +18,8 @@ namespace ProgressionExpanded
     /// alley turns up are a pure roll. A master criminal's alley earns and costs exactly what a
     /// novice's does.
     ///
-    /// The crime rating one needs no ownership check: the whole crime model is player-facing --
-    /// every other method on it is named for the player -- so the only rating that constant ever
+    /// The crime rating one needs no ownership check: the whole crime model is player-facing -
+    /// every other method on it is named for the player - so the only rating that constant ever
     /// reaches is yours.
     /// </remarks>
     internal static class AlleyBonus
@@ -125,7 +125,7 @@ namespace ProgressionExpanded
         /// Better men turn up, by tilting the roll rather than rewriting who it can produce.
         /// </summary>
         /// <remarks>
-        /// The roll runs low-is-good -- above 0.5 nothing turns up at all, and each band below it
+        /// The roll runs low-is-good - above 0.5 nothing turns up at all, and each band below it
         /// gives more and better troops. Shrinking the number toward zero therefore improves the
         /// draw without touching the table itself, so the rosters stay exactly the ones the game
         /// would ever hand out.

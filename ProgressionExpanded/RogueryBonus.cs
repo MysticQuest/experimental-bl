@@ -17,7 +17,7 @@ namespace ProgressionExpanded
     /// crouched speed and noise suppression. Nothing covers a town brawl unless the player happens
     /// to have taken one particular perk, which is the gap this fills. Frightening people into
     /// surrendering started here too, but it reads people rather than robs them, so it moved to
-    /// Cunning -- see <see cref="CunningIntimidationPatch"/>.
+    /// Cunning - see <see cref="CunningIntimidationPatch"/>.
     /// </remarks>
     internal static class RogueryBonus
     {

@@ -19,7 +19,7 @@ namespace ProgressionExpanded
         // Learning limit: limit = C0 + Ka*(attr-1) + Kf*focus, plus a bonus only at 10/10.
         // The three coefficients are not hand-tuned; they are solved from the ceilings we want to
         // pin, so those ceilings stay put when the penalty slope changes.
-        private const float UntrainedCap = 46f;   // attribute 4, no focus -- matches vanilla
+        private const float UntrainedCap = 46f;   // attribute 4, no focus - matches vanilla
         private const float NearMaxCap = 275f;    // the best a build one point short can ever reach
 
         private static float _c0 = -12.3f;
@@ -33,7 +33,7 @@ namespace ProgressionExpanded
         /// The rate is smoothed with a softplus rather than clamped at a floor. A clamp left the
         /// cost per level flat once it bit, and a piecewise hand-off left a visible corner where
         /// the two halves met. Softplus is linear well above zero, decays exponentially well below
-        /// it, and is smooth everywhere in between -- so the curve has no corners at all and never
+        /// it, and is smooth everywhere in between - so the curve has no corners at all and never
         /// reaches zero.
         /// </remarks>
         private const float RateEase = 0.10f;
@@ -68,7 +68,7 @@ namespace ProgressionExpanded
 
         /// <summary>
         /// Focus contributes at half vanilla's weight, evenly per point, and normalised to the
-        /// maximum actually allowed -- so a lower cap gives fewer, bigger steps rather than
+        /// maximum actually allowed - so a lower cap gives fewer, bigger steps rather than
         /// quietly costing the player part of what focus is worth.
         /// </summary>
         /// <remarks>
@@ -129,7 +129,7 @@ namespace ProgressionExpanded
         /// <remarks>
         /// Level 1 costs nothing, which is the one deliberate departure from vanilla's own table.
         /// Vanilla asks for a single point there, so a character who has earned literally nothing
-        /// is level 0 until the first scrap of XP arrives -- which it does within a few paces of
+        /// is level 0 until the first scrap of XP arrives - which it does within a few paces of
         /// leaving the first town, and the level pops for no reason the player can see. Starting
         /// at 1 is what everyone assumes is happening anyway.
         /// </remarks>
@@ -184,8 +184,8 @@ namespace ProgressionExpanded
         }
 
         /// <summary>
-        /// Pins three ceilings -- untrained, and the two builds a single point short of the
-        /// maximum -- then solves the limit line through them. Without this the low-attribute
+        /// Pins three ceilings - untrained, and the two builds a single point short of the
+        /// maximum - then solves the limit line through them. Without this the low-attribute
         /// skills drift below the value character creation already handed the player, and start
         /// the game past their own ceiling.
         /// </summary>

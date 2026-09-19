@@ -16,12 +16,12 @@ namespace ProgressionExpanded
     /// This is the third attempt at the same paragraph, and the differences matter.
     ///
     /// The first wrote it from a postfix on <c>RefreshValues</c> and <c>RefreshWithCurrentValues</c>
-    /// -- the view model's refresh pipeline. It never displayed a single line, and merely having
+    /// - the view model's refresh pipeline. It never displayed a single line, and merely having
     /// those two wrapped crashed character creation; a bisect over the patch set is what finally
     /// pinned it. The second appended to the attribute's own <c>Description</c>, which is safe but
     /// lands above the icons and gets glued to vanilla's "The skills that are bound to..." sentence.
     ///
-    /// This one hangs off <c>ExecuteInspectAttribute</c> -- the click that opens the card. It is a
+    /// This one hangs off <c>ExecuteInspectAttribute</c> - the click that opens the card. It is a
     /// command handler rather than part of the refresh and binding machinery, it runs only when a
     /// player opens the card, and it never runs during character creation's automated flow. It is
     /// also gated by the character screen setting, so it is one switch away from being gone.
@@ -46,7 +46,7 @@ namespace ProgressionExpanded
                 if (lines.Count == 0) return;
 
                 // The leading blank line is the gap above the block. The card has its own spacing
-                // there, but it is the first thing the layout gives up when the panel is full --
+                // there, but it is the first thing the layout gives up when the panel is full -
                 // Control's description runs to four lines rather than three, and that one extra
                 // line was enough to leave the bonuses sitting directly against the icon captions
                 // while every other attribute had room. Spelling the gap out makes it the same

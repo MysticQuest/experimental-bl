@@ -10,14 +10,14 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// Most of a skill's perks are spent on the party, the fief or the realm. Points you pour into
-    /// a skill for your own sake buy very little, and a few skills -- Tactics worst of all -- buy
+    /// a skill for your own sake buy very little, and a few skills - Tactics worst of all - buy
     /// almost nothing. This is the carpet under all of them: every twenty points is a step, and
     /// each step is worth more than the one before it, so the back half of a skill is where the
     /// reward actually lives.
     ///
     /// Step n is worth n units, so k steps are worth k(k+1)/2 out of the 136 a capped skill is
     /// worth. Skill 100 is a tenth of the way there, 200 is two fifths, 275 is two thirds. Nothing
-    /// here is a threshold the player has to look up -- it just keeps growing, faster near the top.
+    /// here is a threshold the player has to look up - it just keeps growing, faster near the top.
     /// </remarks>
     internal static class Mastery
     {

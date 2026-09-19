@@ -130,7 +130,7 @@ namespace ProgressionExpanded
         /// </summary>
         /// <remarks>
         /// <c>PatchAll</c> stops dead at the first class it cannot apply, and everything after it
-        /// in the assembly is silently left unpatched -- which is a very quiet way to lose half a
+        /// in the assembly is silently left unpatched - which is a very quiet way to lose half a
         /// mod. One class failing should cost that one feature and say so.
         /// </remarks>
         /// <summary>Patch classes that attach to a mission, an agent, or an encounter.</summary>
@@ -140,7 +140,7 @@ namespace ProgressionExpanded
             "AgentSpawnProbePatch", "BanditRecruitsPatch", "CunningBattleLootPatch",
 
             // Hit points belong here too. It is not a mission patch by name, but it is the one
-            // thing left that an agent reads while it is being built -- and it returns a struct
+            // thing left that an agent reads while it is being built - and it returns a struct
             // by ref, which is the shape most likely to be mis-wrapped.
             "VigorHitPointsPatch", "AttributeCardPatch", "CharacterCreationAttributeCardPatch",
             "ControlStaggerPatch", "VigorMomentumPatch", "VigorKnockbackPatch",

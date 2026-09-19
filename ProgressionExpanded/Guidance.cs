@@ -24,11 +24,11 @@ namespace ProgressionExpanded
             "put online. I have not played a full lifetime through with it. The balance is what " +
             "felt right to me rather than anything properly tested, and it may well crash. If a " +
             "campaign starts acting up, open Troubleshooting and start switching things off from " +
-            "the bottom -- that is what it is there for.\n \n" +
+            "the bottom - that is what it is there for.\n \n" +
             "So, theoretically:\n \n" +
             "You should be able to change anything here mid-campaign without hurting your save, and " +
             "nothing deletes XP you have earned. The only real question is when a change kicks in.\n \n" +
-            "Most of it takes effect straight away -- the bonus switches, the two strength sliders, " +
+            "Most of it takes effect straight away - the bonus switches, the two strength sliders, " +
             "the other-heroes toggle, and the XP rate for each skill.\n \n" +
             "The curve settings need a reload. That is the level 330 is reachable at, career length, " +
             "early pace, the wall at the top, and the strength of the skill bonuses. The curve gets " +
@@ -39,7 +39,7 @@ namespace ProgressionExpanded
             "One thing that catches people out: your skill levels can move after a reload. A skill " +
             "level is really just your stored XP measured against the curve, so if the curve changes, " +
             "the same XP buys a different level. Make things easier and your skills jump up; make " +
-            "them harder and they drop. Nothing is lost either way -- put the setting back and they " +
+            "them harder and they drop. Nothing is lost either way - put the setting back and they " +
             "should come back with it.\n \n" +
             "And turning the curve off does not turn the mod off. The attribute bonuses, the skill " +
             "bonuses, the XP rates and everything your children inherit all keep running. That is " +

@@ -20,7 +20,7 @@ namespace ProgressionExpanded
     ///
     /// They rise evenly with the skill, like every other effect in the game: the <c>bonus</c>
     /// handed to <c>Initialize</c> is simply the value at the cap divided by it. The one thing
-    /// <see cref="EffectCeilingPatch"/> still does is set where vanilla is allowed to end up --
+    /// <see cref="EffectCeilingPatch"/> still does is set where vanilla is allowed to end up -
     /// its Tactics sacrifice reduction is lifted from a third to a half.
     /// </remarks>
     internal static class MasteryEffects
@@ -85,7 +85,7 @@ namespace ProgressionExpanded
         /// </summary>
         /// <remarks>
         /// Turning the bonuses off has to take them off the character screen too, not merely zero
-        /// them -- a row reading "+0%" is worse than no row. Since the screen builds its list by
+        /// them - a row reading "+0%" is worse than no row. Since the screen builds its list by
         /// walking <c>SkillEffect.All</c>, withdrawing ours from that list is what hides them, and
         /// putting them back is what brings them round again.
         /// </remarks>
@@ -209,7 +209,7 @@ namespace ProgressionExpanded
         /// <remarks>
         /// Roguery would otherwise carry eleven rows and overflow its panel. These three are the
         /// least interesting to read and the least missed, so they work without being registered
-        /// -- which also means nothing has to edit the screen's list after the game has built it.
+        /// - which also means nothing has to edit the screen's list after the game has built it.
         /// </remarks>
         internal static float FromSkill(SkillObject? skill, float atCap)
         {
@@ -250,13 +250,13 @@ namespace ProgressionExpanded
         }
 
         /// <summary>
-        /// How far a stronghold can be read, by your own eye or your scout's -- whichever is better.
+        /// How far a stronghold can be read, by your own eye or your scout's - whichever is better.
         /// </summary>
         /// <remarks>
         /// The scouting half deliberately goes through the party role rather than the player, so
         /// it is the hero actually doing the scouting who earns it. Leave the slot empty and the
         /// game hands the role back to the party leader, which means it falls to you at your own
-        /// Scouting -- the same rule vanilla uses for every other party role.
+        /// Scouting - the same rule vanilla uses for every other party role.
         /// </remarks>
         internal static float IntelReach()
         {
@@ -293,8 +293,8 @@ namespace ProgressionExpanded
         /// </summary>
         /// <remarks>
         /// All of this is static, and the game keeps the process alive across campaigns. Without
-        /// this, starting or loading a second campaign leaves <c>_registered</c> true -- so the new
-        /// campaign never gets its effects -- while <c>Targets</c> still holds SkillEffect objects
+        /// this, starting or loading a second campaign leaves <c>_registered</c> true - so the new
+        /// campaign never gets its effects - while <c>Targets</c> still holds SkillEffect objects
         /// belonging to a campaign that no longer exists, which are then read on every skill query.
         /// </remarks>
         internal static void Forget()

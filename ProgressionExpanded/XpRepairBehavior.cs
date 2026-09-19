@@ -12,7 +12,7 @@ namespace ProgressionExpanded
     /// <remarks>
     /// The game stores an absolute XP total per skill and shows progress as
     /// <c>stored - GetXpRequiredForSkillLevel(currentLevel)</c>. Change the curve underneath a
-    /// character -- by installing this, or by moving any setting and reloading -- and that
+    /// character - by installing this, or by moving any setting and reloading - and that
     /// subtraction goes negative, which is why the character screen can read something like
     /// "-134154 / 9862 xp". Re-seeding the skill to the floor of its current level fixes the
     /// display and costs at most the partial progress toward the next level.

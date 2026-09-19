@@ -11,8 +11,8 @@ namespace ProgressionExpanded
     /// A trader's caravans and workshops sometimes have a very good day.
     /// </summary>
     /// <remarks>
-    /// Vanilla gives Trade no personal effect at all, and what it does govern -- the price you pay
-    /// and what your holdings earn -- is flat once a caravan is running. This is the one thing a
+    /// Vanilla gives Trade no personal effect at all, and what it does govern - the price you pay
+    /// and what your holdings earn - is flat once a caravan is running. This is the one thing a
     /// merchant's judgement plausibly buys that a percentage does not: the occasional windfall.
     ///
     /// The roll is deliberately not random at the moment of asking. Both income methods are called
