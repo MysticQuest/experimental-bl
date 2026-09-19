@@ -139,6 +139,25 @@ namespace ProgressionExpanded
             var cloth = Item(Cloth);
             if (hero?.BattleEquipment == null || cloth == null) return;
 
+            // The packs matter as much as the slots: the reward for the village mission arrives as
+            // inventory rather than as worn gear, which is why watching what the hero had on saw
+            // nothing at all.
+            var loot = new List<string>();
+            var roster = MobileParty.MainParty?.ItemRoster;
+            if (roster != null)
+                foreach (var element in roster)
+                {
+                    var item = element.EquipmentElement.Item;
+                    if (item != null && item.StringId != Grain)
+                        loot.Add(item.StringId + " x" + element.Amount);
+                }
+
+            if (loot.Count > 0)
+            {
+                SweepInventory();
+                Log.Write("Burlap sack: took back from the packs - " + string.Join(", ", loot.ToArray()));
+            }
+
             var body = hero.BattleEquipment[EquipmentIndex.Body].Item;
             var head = hero.BattleEquipment[EquipmentIndex.Head].Item;
             if (body == cloth && head == null) return;
