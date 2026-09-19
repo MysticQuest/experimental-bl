@@ -385,13 +385,13 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
-        [SettingPropertyButton("Save this character", Content = "Save", Order = 9, RequireRestart = false,
-            HintText = "Writes your character to a file beside the settings: name, face, height, weight, build, attributes, focus and skills. Voice may or may not come with it - it has no setting of its own, so it travels only if the game keeps it in the face key. Making the same character again for every test campaign is the slow part of testing anything that only happens on a new one.")]
+        [SettingPropertyButton("Save appearance*", Content = "Save", Order = 9, RequireRestart = false,
+            HintText = "* Voice is the asterisk: it has no setting of its own, so it travels only if the game keeps it inside the face key, and it may well not. Everything else does - name, face, height, weight, build, and the attributes, focus and skills with them. Making the same character again for every test campaign is the slow part of testing anything that only happens on a new one.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action SaveCharacter { get; set; } = CharacterTemplate.Save;
 
-        [SettingPropertyButton("Load that character", Content = "Load", Order = 10, RequireRestart = false,
-            HintText = "Stamps the saved character onto whoever you are playing now. Make any character at all, press this, and you are the one you saved. A development tool: it writes straight to the hero, which is fine on a test campaign and not something to do to a real one.")]
+        [SettingPropertyButton("Load appearance*", Content = "Load", Order = 10, RequireRestart = false,
+            HintText = "Stamps the saved one onto whoever you are playing now. Make any character at all, press this, and you are the one you saved - voice aside, which may not have come along. A development tool: it writes straight to the hero, which is fine on a test campaign and not something to do to a real one.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action LoadCharacter { get; set; } = CharacterTemplate.Load;
 
