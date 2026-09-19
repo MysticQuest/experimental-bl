@@ -25,27 +25,43 @@ namespace ProgressionExpanded
             private readonly float _perPoint;
             private readonly bool _percent;
 
-            /// <summary>Whether the game only hands this out in whole units, as it does companions.</summary>
-            private readonly bool _whole;
+            /// <summary>
+            /// For a bonus the game only hands out whole, the points one unit costs; zero otherwise.
+            /// </summary>
+            /// <remarks>
+            /// Companions arrive one at a time, five points apart. Stating that as "+0.2 per point"
+            /// is arithmetically right and tells the player nothing they can act on -- worse, next
+            /// to a floored total it reads as "you have none, and a point buys a fifth of one".
+            /// A bonus that arrives whole is quoted as the interval it arrives on instead.
+            /// </remarks>
+            private readonly int _pointsPerUnit;
 
-            internal Effect(string name, float perPoint, bool percent = false, bool whole = false)
+            internal Effect(string name, float perPoint, bool percent = false, int pointsPerUnit = 0)
             {
                 _name = name;
                 _perPoint = perPoint;
                 _percent = percent;
-                _whole = whole;
+                _pointsPerUnit = pointsPerUnit;
             }
 
-            /// <summary>What the attribute is worth at this value, with the rate behind it.</summary>
-            internal string At(int value) =>
-                $"+{Amount(_perPoint * value, _whole)} {_name} (+{Amount(_perPoint, false)} per point)";
+            private bool Whole => _pointsPerUnit > 0;
 
-            /// <summary>What a single point is worth, for a card with no value to show yet.</summary>
-            internal string PerPoint => $"+{Amount(_perPoint, false)} {_name} per point";
+            /// <summary>What the attribute is worth at this value, with the rate behind it.</summary>
+            internal string At(int value) => $"+{Amount(_perPoint * value, Whole)} {_name} ({Rate})";
+
+            /// <summary>What a point is worth, for a card with no value to show yet.</summary>
+            internal string PerPoint => Whole
+                ? $"+1 {_name} per {_pointsPerUnit} points"
+                : $"+{Amount(_perPoint, false)} {_name} per point";
+
+            /// <summary>The rate alone, as it reads in brackets behind a total.</summary>
+            private string Rate => Whole
+                ? $"1 per {_pointsPerUnit} points"
+                : $"+{Amount(_perPoint, false)} per point";
 
             /// <remarks>
-            /// The whole-unit rounding belongs to the total and not to the rate: a fifth of a
-            /// companion is what the point buys, even though four of them buy nothing on their own.
+            /// The rounding belongs to the total and not to the rate, which is why only the total
+            /// asks for it: four points towards a companion are real, they just are not a companion.
             /// </remarks>
             private string Amount(float amount, bool whole)
             {
@@ -92,7 +108,8 @@ namespace ProgressionExpanded
             if (attribute == DefaultCharacterAttributes.Social)
                 return new[]
                 {
-                    new Effect("companion limit", 1f / AttributeBonus.SocialPointsPerCompanion, whole: true),
+                    new Effect("companion limit", 1f / AttributeBonus.SocialPointsPerCompanion,
+                        pointsPerUnit: AttributeBonus.SocialPointsPerCompanion),
                 };
 
             if (attribute == DefaultCharacterAttributes.Intelligence)
