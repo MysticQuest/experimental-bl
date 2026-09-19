@@ -155,12 +155,43 @@ namespace ProgressionExpanded
             CampaignEvents.OnNewGameCreatedPartialFollowUpEndEvent.AddNonSerializedListener(this, Strip);
             CampaignEvents.TickEvent.AddNonSerializedListener(this, OnTick);
             CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, CloseWindow);
+            CampaignEvents.OnGameLoadFinishedEvent.AddNonSerializedListener(this, Retrofit);
         }
 
         public override void SyncData(IDataStore dataStore)
         {
             dataStore.SyncData("ProgressionExpanded_SweepPending", ref _sweepPending);
             dataStore.SyncData("ProgressionExpanded_TutorialPending", ref _tutorialPending);
+            dataStore.SyncData("ProgressionExpanded_Retrofitted", ref _retrofitted);
+        }
+
+        /// <summary>
+        /// Runs the after-the-fact swap once, on the first load of a save that pre-dates the fix.
+        /// </summary>
+        /// <remarks>
+        /// Automatic rather than a button, because a fix you have to know about and press is a
+        /// fix most people never get. It is safe to run on any save: it does nothing unless that
+        /// exact set is sitting in the packs, and it remembers having run.
+        /// </remarks>
+        private bool _retrofitted;
+
+        private void Retrofit()
+        {
+            if (_retrofitted) return;
+            _retrofitted = true;
+
+            try
+            {
+                if (!Mod.On || !(Settings.Instance?.StartWithNothing ?? false)) return;
+
+                var said = SwapNow("stealth_tutorial_set_player");
+                if (said.StartsWith("Took", StringComparison.Ordinal))
+                    InformationManager.DisplayMessage(new InformationMessage(said));
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("Retrofit", exception);
+            }
         }
 
         /// <summary>
@@ -191,15 +222,15 @@ namespace ProgressionExpanded
                 taken.Add(element.Item.StringId);
             }
 
+            if (taken.Count == 0) return "Nothing of that set was in your packs.";
+
             var knife = Kit(Knife, ItemObject.ItemTypeEnum.OneHandedWeapon);
             var shoes = Kit(Boots, ItemObject.ItemTypeEnum.LegArmor);
             if (knife != null) roster.AddToCounts(knife, 1);
             if (shoes != null) roster.AddToCounts(shoes, 1);
 
-            Log.Write("Burlap sack: swapped after the fact, took " + string.Join(", ", taken.ToArray()));
-            return taken.Count == 0
-                ? "None of that set was still in your packs; the kit has been added anyway."
-                : $"Took {taken.Count} item(s) back and left the knife and shoes.";
+            Log.Write("Burlap sack: swapped on load, took " + string.Join(", ", taken.ToArray()));
+            return $"Took {taken.Count} item(s) of the villagers' gift back and left the knife and shoes.";
         }
 
         /// <summary>
@@ -347,6 +378,7 @@ namespace ProgressionExpanded
 
                 _sweepPending = true;
                 _tutorialPending = true;
+                _retrofitted = true;
                 Log.Write("Burlap sack: stripped all three equipment sets, gold and inventory");
 
                 var message = new TextObject("{=MCpoor}A burlap sack and a handful of stones. Everything else is gone.");
