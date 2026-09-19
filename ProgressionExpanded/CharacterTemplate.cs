@@ -40,7 +40,12 @@ namespace ProgressionExpanded
                 var text = new StringBuilder();
                 text.AppendLine("name=" + hero.Name);
                 text.AppendLine("female=" + hero.IsFemale);
+                // The key carries the face and the height; weight and build live in the other
+                // half of the body properties, which is not settable as a unit, so they are
+                // written and restored through the two properties the hero exposes for them.
                 text.AppendLine("body=" + hero.BodyProperties);
+                text.AppendLine("weight=" + hero.Weight.ToString(Culture));
+                text.AppendLine("build=" + hero.Build.ToString(Culture));
 
                 foreach (var attribute in Attributes())
                     text.AppendLine("attr." + attribute.StringId + "=" + hero.GetAttributeValue(attribute));
@@ -90,12 +95,16 @@ namespace ProgressionExpanded
                     hero.SetName(text, text);
                 }
 
-                // Only the static half is settable, and it is the half that holds the face.
+                // Only the static half is settable as a unit, and it is the half holding the
+                // face and the height.
                 if (values.TryGetValue("body", out var body)
                     && BodyProperties.FromString(body, out var properties))
                 {
                     hero.StaticBodyProperties = properties.StaticProperties;
                 }
+
+                if (Decimal(values, "weight", out var weight)) hero.Weight = weight;
+                if (Decimal(values, "build", out var build)) hero.Build = build;
 
                 // Attributes are cleared wholesale and rebuilt, because the game has no public
                 // setter for one: it only knows how to add and remove.
@@ -132,6 +141,16 @@ namespace ProgressionExpanded
 
         private static IEnumerable<SkillObject> Skills() =>
             MBObjectManager.Instance?.GetObjectTypeList<SkillObject>() ?? (IEnumerable<SkillObject>)new SkillObject[0];
+
+        private static readonly System.Globalization.CultureInfo Culture =
+            System.Globalization.CultureInfo.InvariantCulture;
+
+        private static bool Decimal(IDictionary<string, string> values, string key, out float number)
+        {
+            number = 0f;
+            return values.TryGetValue(key, out var text)
+                   && float.TryParse(text, System.Globalization.NumberStyles.Float, Culture, out number);
+        }
 
         private static bool Number(IDictionary<string, string> values, string key, out int number)
         {
