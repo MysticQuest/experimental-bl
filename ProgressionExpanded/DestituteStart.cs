@@ -40,9 +40,19 @@ namespace ProgressionExpanded
         /// <summary>The one thing kept back, so the first days are hard rather than fatal.</summary>
         private const string Grain = "grain";
 
-        /// <summary>Plain Empire townsfolk kit: a knife and a pair of town boots.</summary>
+        /// <summary>
+        /// What is left after the bandits: a knife and a pair of ragged boots.
+        /// </summary>
+        /// <remarks>
+        /// The Empire makes two daggers, Pugio and this one, and Pugio is a soldier's sidearm -
+        /// gladius_b is the one the game calls simply Knife.
+        ///
+        /// The boots are not Imperial, deliberately. Every Empire pair is town gear - Fine Town
+        /// Boots, Folded Town Boots, Horseman Boots - which is the wrong look for someone who
+        /// owns a sack. Ragged Boots belong to no culture at all, so they suit any start.
+        /// </remarks>
         private const string Knife = "gladius_b";
-        private const string Boots = "folded_town_boots";
+        private const string Boots = "ragged_boots";
 
         /// <summary>
         /// The kit, by name, with a filtered search only as a fallback.
