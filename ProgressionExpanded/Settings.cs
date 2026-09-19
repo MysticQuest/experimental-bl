@@ -35,7 +35,7 @@ namespace ProgressionExpanded
         /// leaving both bonus groups switched on.
         /// </remarks>
         [SettingPropertyBool("Start with a burlap sack (new campaigns only)", Order = 5, RequireRestart = false,
-            HintText = "The bandits who came for your family took the rest of it too - the horse, the purse, your father's sword - and your brother, who still has his, is not in a sharing mood. You begin in a cozy burlap sack. Only applies when a new campaign begins; an existing one is never stripped.")]
+            HintText = "The bandits who came for your family took the rest of it too - the horse, the purse, your father's sword - and your brother, who still has his, is not in a sharing mood. You begin in a cozy burlap sack. It also makes the first villages less generous: the kit handed over at the end of the tutorial is trimmed to a knife and a pair of shoes. Only applies when a new campaign begins; an existing one is never stripped.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool StartWithNothing { get; set; } = true;
 

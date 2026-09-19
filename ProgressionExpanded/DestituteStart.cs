@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.GameState;
+using System.Reflection;
 using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
@@ -37,6 +38,12 @@ namespace ProgressionExpanded
 
         /// <summary>The one thing kept back, so the first days are hard rather than fatal.</summary>
         private const string Grain = "grain";
+
+        /// <summary>The plainest blade in the game: it is called Knife and nothing else.</summary>
+        internal const string Knife = "gladius_b";
+
+        /// <summary>Two points of leg armour, and the worst pair not named after a lady.</summary>
+        internal const string Shoes = "southern_moccasins";
 
         /// <summary>
         /// Set when a new campaign strips, cleared by the sweep that follows it an hour later.
@@ -178,6 +185,36 @@ namespace ProgressionExpanded
                 roster.AddToCounts(element.EquipmentElement, -element.Amount);
         }
 
+        /// <summary>
+        /// Strips the sets again and hands back a knife and a pair of shoes.
+        /// </summary>
+        internal void Rekit()
+        {
+            var hero = Hero.MainHero;
+            if (hero == null) return;
+
+            var cloth = Item(Cloth);
+            var pebbles = Item(Pebbles);
+            var knife = Item(Knife);
+            var shoes = Item(Shoes);
+
+            Undress(hero.BattleEquipment, cloth, pebbles);
+            Undress(hero.CivilianEquipment, cloth, null);
+            Undress(hero.StealthEquipment, cloth, null);
+
+            foreach (var set in new[] { hero.BattleEquipment, hero.CivilianEquipment, hero.StealthEquipment })
+            {
+                if (set == null) continue;
+                if (shoes != null) set[EquipmentIndex.Leg] = new EquipmentElement(shoes);
+                if (knife != null) set[EquipmentIndex.Weapon1] = new EquipmentElement(knife);
+            }
+
+            SweepInventory();
+            Log.Write("Burlap sack: trimmed the tutorial reward to a knife and a pair of shoes");
+        }
+
+        private static ItemObject? Item(string id) => MBObjectManager.Instance?.GetObject<ItemObject>(id);
+
         /// <summary>Empties every slot, then puts back the one thing decency requires.</summary>
         private static void Undress(Equipment set, ItemObject? cloth, ItemObject? pebbles)
         {
@@ -215,6 +252,59 @@ namespace ProgressionExpanded
             catch (Exception exception)
             {
                 Guard.Report("MapReady", exception);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Cuts the kit the tutorial hands over at its end down to a knife and a pair of shoes.
+    /// </summary>
+    /// <remarks>
+    /// Finishing the tutorial refills both equipment sets outright - the game calls FillFrom on
+    /// each of them - which puts a full set of gear on a character who was meant to own a sack.
+    /// It is the single largest handout in the opening and it undoes the burlap start on its own.
+    ///
+    /// Rather than block the reward, this lets it happen and then trims it, so nothing the
+    /// tutorial expects to have done is left half finished. What survives is the plainest blade
+    /// in the game and the second-worst shoes, which is enough to stop being a threat to nobody
+    /// and not enough to skip the early game.
+    /// </remarks>
+    [HarmonyPatch]
+    internal static class TutorialRewardPatch
+    {
+        private const string Behaviour =
+            "StoryMode.GameComponents.CampaignBehaviors.TutorialPhaseCampaignBehavior";
+
+        /// <summary>
+        /// Found by name, because StoryMode is not referenced.
+        /// </summary>
+        /// <remarks>
+        /// Adding a reference for one method would tie the whole mod to the campaign's story
+        /// assembly, and a player running without it would get a load failure rather than a
+        /// missing trim. This way the patch quietly does not apply instead.
+        /// </remarks>
+        private static bool Prepare() => Target() != null;
+
+        private static MethodBase? Target() =>
+            AccessTools.Method(AccessTools.TypeByName(Behaviour), "FinalizeTutorialPhase");
+
+        private static MethodBase TargetMethod() => Target()!;
+
+        [HarmonyPostfix]
+        private static void Trim()
+        {
+            Guard.Touch("TutorialReward");
+
+            try
+            {
+                var settings = Settings.Instance;
+                if (!Mod.On || settings == null || !settings.StartWithNothing) return;
+
+                DestituteStartBehavior.Current?.Rekit();
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("TutorialReward", exception);
             }
         }
     }
