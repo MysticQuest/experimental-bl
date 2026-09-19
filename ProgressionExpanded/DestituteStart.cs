@@ -139,9 +139,9 @@ namespace ProgressionExpanded
         /// Takes back what a fight just paid into the packs and leaves the kit instead.
         /// </summary>
         /// <remarks>
-        /// The first won fight of a campaign is the hideout at the end of the mission in Tevea,
-        /// and its spoils are the full set of gear that this setting exists to prevent. Once done,
-        /// every later fight pays normally.
+        /// Called both from the loot hook and from the tick that watches the packs, so it has to
+        /// be safe to call when nothing has changed: it takes only what is above the counts it
+        /// was given, and does nothing at all when that comes to nothing.
         /// </remarks>
         internal void SwapTheSpoils(Dictionary<string, int> before)
         {
@@ -235,6 +235,37 @@ namespace ProgressionExpanded
         {
             Sweep();
             Enforce();
+            WatchThePacks();
+        }
+
+        /// <summary>
+        /// Swaps the first haul of a campaign for the kit, however it arrived.
+        /// </summary>
+        /// <remarks>
+        /// The reward for the mission in Tevea is handed over in conversation - pick the line
+        /// about taking whatever you can get and the items are simply in your packs, with no loot
+        /// screen and no battle resolution to hook. Four different hooks were written against
+        /// routes it does not take.
+        ///
+        /// So this stops caring how it arrives. While the setting is on and the kit is still
+        /// owed, the first non-grain items to appear in the packs are taken and the kit is left
+        /// in their place, whether they came from a fight, a conversation or anything else. It
+        /// costs a dictionary walk on a roster holding two items, on a tick, until it fires once.
+        /// </remarks>
+        private void WatchThePacks()
+        {
+            if (!WantsTheKitTaken) return;
+
+            var roster = MobileParty.MainParty?.ItemRoster;
+            if (roster == null || roster.Count == 0) return;
+
+            var before = new Dictionary<string, int>();
+            foreach (var element in roster)
+                if (element.EquipmentElement.Item != null
+                    && element.EquipmentElement.Item.StringId == Grain)
+                    before[Grain] = element.Amount;
+
+            SwapTheSpoils(before);
         }
 
         /// <summary>An hour in, the scripted opening is done and the window closes for good.</summary>
