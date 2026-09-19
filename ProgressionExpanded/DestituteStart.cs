@@ -164,6 +164,45 @@ namespace ProgressionExpanded
         }
 
         /// <summary>
+        /// Does the swap after the fact, on a save where the set was already handed over.
+        /// </summary>
+        /// <remarks>
+        /// For a campaign that took the villagers' gift before this worked. It removes what is
+        /// still there of that exact set, one for one and only where the item is actually in the
+        /// packs, so anything sold, dropped or already replaced is left alone - and so is
+        /// everything else the player owns.
+        /// </remarks>
+        internal string SwapNow(string setId)
+        {
+            var roster = MobileParty.MainParty?.ItemRoster;
+            var gift = MBObjectManager.Instance?.GetObject<MBEquipmentRoster>(setId);
+            if (roster == null || gift == null) return "No campaign, or the tutorial set is missing.";
+
+            var taken = new List<string>();
+            var kit = gift.DefaultEquipment;
+
+            for (var slot = EquipmentIndex.WeaponItemBeginSlot; slot < EquipmentIndex.NumEquipmentSetSlots; slot++)
+            {
+                var element = kit[slot];
+                if (element.IsEmpty || element.Item == null) continue;
+                if (roster.GetItemNumber(element.Item) <= 0) continue;
+
+                roster.AddToCounts(element.Item, -1);
+                taken.Add(element.Item.StringId);
+            }
+
+            var knife = Kit(Knife, ItemObject.ItemTypeEnum.OneHandedWeapon);
+            var shoes = Kit(Boots, ItemObject.ItemTypeEnum.LegArmor);
+            if (knife != null) roster.AddToCounts(knife, 1);
+            if (shoes != null) roster.AddToCounts(shoes, 1);
+
+            Log.Write("Burlap sack: swapped after the fact, took " + string.Join(", ", taken.ToArray()));
+            return taken.Count == 0
+                ? "None of that set was still in your packs; the kit has been added anyway."
+                : $"Took {taken.Count} item(s) back and left the knife and shoes.";
+        }
+
+        /// <summary>
         /// Hands over the kit in place of the set the villagers meant to give.
         /// </summary>
         /// <remarks>

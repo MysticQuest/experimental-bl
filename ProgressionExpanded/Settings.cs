@@ -385,6 +385,11 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
+        [SettingPropertyButton("Swap the villagers' kit", Content = "Swap", Order = 14, RequireRestart = false,
+            HintText = "For a save that already took the full set: removes what is left of it and leaves the knife and shoes. Only that set is touched, and only what is still in your packs.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
+        public Action SwapKit { get; set; } = TutorialShortcut.FixKit;
+
         [SettingPropertyButton("End the mission", Content = "Leave", Order = 12, RequireRestart = false,
             HintText = "Ends whatever scene is running and returns you to the world map. It ends the mission rather than winning it, so a reward that depends on finishing properly will not arrive.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]

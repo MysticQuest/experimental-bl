@@ -23,6 +23,27 @@ namespace ProgressionExpanded
     internal static class TutorialShortcut
     {
         internal static readonly Action Finish = Run;
+        internal static readonly Action FixKit = SwapTheKit;
+
+        /// <summary>
+        /// Applies the villagers' swap to a campaign that already took the full set.
+        /// </summary>
+        private static void SwapTheKit()
+        {
+            try
+            {
+                var behaviour = DestituteStartBehavior.Current;
+                if (behaviour == null) { Say("No campaign is running."); return; }
+
+                Say(behaviour.SwapNow("stealth_tutorial_set_player"));
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("SwapTheKit", exception);
+                Say("Could not swap the kit; see the mod log.");
+            }
+        }
+
         internal static readonly Action Leave = EndActiveMission;
         private static void EndActiveMission()
         {
