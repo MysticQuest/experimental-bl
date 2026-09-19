@@ -39,11 +39,35 @@ namespace ProgressionExpanded
         /// <summary>The one thing kept back, so the first days are hard rather than fatal.</summary>
         private const string Grain = "grain";
 
-        /// <summary>The plainest blade in the game: it is called Knife and nothing else.</summary>
-        internal const string Knife = "gladius_b";
+        /// <summary>
+        /// The feeblest Empire dagger and the feeblest Empire leg armour the game has loaded.
+        /// </summary>
+        /// <remarks>
+        /// Picked by walking the item list rather than by naming ids. Tier is computed from an
+        /// item's stats when the game loads it and is nowhere in the XML, so choosing by name
+        /// meant guessing: the blade I had picked turned out to be tier 2. Sorting the real
+        /// objects by tier cannot guess wrong, and it survives the game rebalancing its items.
+        /// </remarks>
+        private static ItemObject? Feeblest(ItemObject.ItemTypeEnum kind)
+        {
+            var all = MBObjectManager.Instance?.GetObjectTypeList<ItemObject>();
+            if (all == null) return null;
 
-        /// <summary>The weakest boots the Empire makes, at four points of leg armour.</summary>
-        internal const string Shoes = "folded_town_boots";
+            ItemObject? best = null;
+            foreach (var item in all)
+            {
+                if (item == null || item.ItemType != kind) continue;
+                if (item.Culture?.StringId != "empire") continue;
+                if (kind == ItemObject.ItemTypeEnum.OneHandedWeapon
+                    && item.PrimaryWeapon?.WeaponClass != WeaponClass.Dagger) continue;
+
+                if (best == null || item.Tier < best.Tier
+                    || (item.Tier == best.Tier && item.Value < best.Value))
+                    best = item;
+            }
+
+            return best;
+        }
 
         /// <summary>
         /// Set when a new campaign strips, cleared by the sweep that follows it an hour later.
@@ -67,6 +91,27 @@ namespace ProgressionExpanded
         /// <summary>Whether the opening is still handing things out.</summary>
         internal bool WindowOpen => _sweepPending && Mod.On && (Settings.Instance?.StartWithNothing ?? false);
 
+        /// <summary>
+        /// Set once the world map has finished loading, and never saved.
+        /// </summary>
+        /// <remarks>
+        /// This is what tells a skipped tutorial from a played one. Skipping runs the tutorial's
+        /// own finish during campaign creation, before there is a map at all; playing it runs the
+        /// same code long after. Campaign time cannot tell them apart - the tutorial barely
+        /// advances the clock, which is why an hour-long window called a real tutorial a skip.
+        /// </remarks>
+        internal static bool MapReady { get; set; }
+
+        /// <summary>
+        /// True from the first moment of a campaign until the villagers pay for the tutorial.
+        /// </summary>
+        /// <remarks>
+        /// Stripping once is not enough: something dresses the hero again after the tutorial ends,
+        /// so the sack has to be kept on rather than merely put on. While this is set, the tick
+        /// puts back anything that reappears, and gold is refused.
+        /// </remarks>
+        private bool _tutorialPending;
+
         public override void RegisterEvents()
         {
             Current = this;
@@ -75,11 +120,39 @@ namespace ProgressionExpanded
             CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, CloseWindow);
         }
 
-        public override void SyncData(IDataStore dataStore) =>
+        public override void SyncData(IDataStore dataStore)
+        {
             dataStore.SyncData("ProgressionExpanded_SweepPending", ref _sweepPending);
+            dataStore.SyncData("ProgressionExpanded_TutorialPending", ref _tutorialPending);
+        }
+
+        /// <summary>Whether the sack still has to be kept on by force.</summary>
+        internal bool Enforcing => _tutorialPending && Mod.On
+                                   && (Settings.Instance?.StartWithNothing ?? false);
+
+        /// <summary>Puts the sack back on if anything has dressed the hero since the last tick.</summary>
+        private void Enforce()
+        {
+            if (!Enforcing) return;
+
+            var hero = Hero.MainHero;
+            var cloth = Item(Cloth);
+            if (hero?.BattleEquipment == null || cloth == null) return;
+
+            var body = hero.BattleEquipment[EquipmentIndex.Body].Item;
+            var head = hero.BattleEquipment[EquipmentIndex.Head].Item;
+            if (body == cloth && head == null) return;
+
+            Rekit(false);
+            Log.Write("Burlap sack: something dressed the hero again; the sack is back on");
+        }
 
         /// <summary>Real time, so anything handed over lands back on the floor the same second.</summary>
-        private void OnTick(float dt) => Sweep();
+        private void OnTick(float dt)
+        {
+            Sweep();
+            Enforce();
+        }
 
         /// <summary>An hour in, the scripted opening is done and the window closes for good.</summary>
         private void CloseWindow()
@@ -145,6 +218,7 @@ namespace ProgressionExpanded
                 SweepInventory();
 
                 _sweepPending = true;
+                _tutorialPending = true;
                 Log.Write("Burlap sack: stripped all three equipment sets, gold and inventory");
 
                 var message = new TextObject("{=MCpoor}A burlap sack and a handful of stones. Everything else is gone.");
@@ -191,12 +265,20 @@ namespace ProgressionExpanded
         /// <summary>
         /// Back to the sack and nothing else, for a tutorial that was never played.
         /// </summary>
-        internal void Bare() => Rekit(false);
+        internal void Bare()
+        {
+            Rekit(false);
+            _tutorialPending = false;
+        }
 
         /// <summary>
         /// Strips the sets again and hands back a knife and a pair of shoes.
         /// </summary>
-        internal void Rekit() => Rekit(true);
+        internal void Rekit()
+        {
+            _tutorialPending = false;
+            Rekit(true);
+        }
 
         private void Rekit(bool earned)
         {
@@ -205,8 +287,8 @@ namespace ProgressionExpanded
 
             var cloth = Item(Cloth);
             var pebbles = Item(Pebbles);
-            var knife = Item(Knife);
-            var shoes = Item(Shoes);
+            var knife = Feeblest(ItemObject.ItemTypeEnum.OneHandedWeapon);
+            var shoes = Feeblest(ItemObject.ItemTypeEnum.LegArmor);
 
             Undress(hero.BattleEquipment, cloth, pebbles);
             Undress(hero.CivilianEquipment, cloth, null);
@@ -260,6 +342,7 @@ namespace ProgressionExpanded
 
             try
             {
+                DestituteStartBehavior.MapReady = true;
                 DestituteStartBehavior.Current?.Sweep();
             }
             catch (Exception exception)
@@ -314,15 +397,13 @@ namespace ProgressionExpanded
                 if (!Mod.On || settings == null || !settings.StartWithNothing) return;
 
                 // The same method restores the player's own gear whether the tutorial was
-                // played or skipped, and skipping it runs this during campaign creation. The
-                // opening window is what tells the two apart: the real tutorial takes days, and
-                // the window shuts an hour in, so a call arriving while it is still open cannot
-                // be a tutorial anyone played.
+                // played or skipped. Skipping runs it during campaign creation, before the map
+                // exists; playing it runs the same code once the map has long been up.
                 var behaviour = DestituteStartBehavior.Current;
                 if (behaviour == null) return;
 
-                if (behaviour.WindowOpen) behaviour.Bare();
-                else behaviour.Rekit();
+                if (DestituteStartBehavior.MapReady) behaviour.Rekit();
+                else behaviour.Bare();
             }
             catch (Exception exception)
             {
@@ -354,7 +435,7 @@ namespace ProgressionExpanded
             try
             {
                 if (changeAmount <= 0 || __instance != Hero.MainHero) return;
-                if (DestituteStartBehavior.Current?.WindowOpen != true) return;
+                if (DestituteStartBehavior.Current?.Enforcing != true) return;
 
                 Log.Write($"Burlap sack: declined {changeAmount} gold before it arrived");
                 changeAmount = 0;
