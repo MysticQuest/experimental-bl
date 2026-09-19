@@ -32,6 +32,8 @@ namespace ProgressionExpanded
         internal const float VigorKnockback = 0.01f;       // knockback, as a share of the base
         internal const float ControlHandling = 0.01f;      // weapon handling
         internal const float ControlStagger = 0.01f;       // damage needed to stagger you
+        internal const float ControlGuard = 0.01f;         // recovery after a block, both ways
+        internal const float ControlFooting = 0.01f;       // knocked back, down or out of the saddle
         internal const float EnduranceMountSpeed = 0.01f;  // horse speed
         internal const float EnduranceRunSpeed = 0.01f;    // running speed
         internal const int EnduranceStamina = 5;           // smithing stamina
@@ -272,6 +274,93 @@ namespace ProgressionExpanded
             catch
             {
                 // Never throw on a damage tick.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Control is how fast your guard comes back after you stop something.
+    /// </summary>
+    /// <remarks>
+    /// A blocked blow freezes both men for a moment. The defender's share of that is the half
+    /// second that gets people killed -- the block held, and the counter was too late anyway.
+    /// Control shortens yours and lengthens theirs, so stopping a blow starts to be worth
+    /// something rather than merely not costing you anything.
+    ///
+    /// Both sides are read from the defender's Control, because both are the same act: it is
+    /// their guard that absorbed the blow and their weapon that recovers from it. Every weapon
+    /// qualifies, shield or not, which is what the handling and stagger bonuses cannot claim.
+    /// </remarks>
+    [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
+        nameof(SandboxAgentApplyDamageModel.CalculateDefendedBlowStunMultipliers))]
+    internal static class ControlGuardPatch
+    {
+        [HarmonyPostfix]
+        private static void Recover(Agent defenderAgent, ref float attackerStunPeriod, ref float defenderStunPeriod)
+        {
+            Guard.Touch("BlockRecovery");
+
+            try
+            {
+                if (!AttributeBonus.Active() || defenderAgent == null) return;
+
+                var control = AttributeBonus.Of(AttributeBonus.HeroOf(defenderAgent), DefaultCharacterAttributes.Control);
+                if (control <= 0) return;
+
+                var share = AttributeBonus.ControlGuard * control;
+                defenderStunPeriod *= Math.Max(0.5f, 1f - share);
+                attackerStunPeriod *= 1f + share;
+            }
+            catch
+            {
+                // Never throw mid-blow.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Control is also what keeps you where you were standing, or sitting.
+    /// </summary>
+    /// <remarks>
+    /// The three resistances are one idea in three places: how hard you are to knock back, to put
+    /// on the ground, and to take out of the saddle. Vanilla builds each from a flat base and the
+    /// victim's Athletics; Control scales the finished figure, so it compounds with Athletics
+    /// rather than replacing what that skill was already worth.
+    ///
+    /// This is the defensive half of what Vigor now does going the other way.
+    /// </remarks>
+    [HarmonyPatch]
+    internal static class ControlFootingPatch
+    {
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SandboxAgentStatCalculateModel),
+            nameof(SandboxAgentStatCalculateModel.GetKnockBackResistance))]
+        private static void StayUp(Agent agent, ref float __result) => Steady(agent, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SandboxAgentStatCalculateModel),
+            nameof(SandboxAgentStatCalculateModel.GetKnockDownResistance))]
+        private static void StayStanding(Agent agent, ref float __result) => Steady(agent, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SandboxAgentStatCalculateModel),
+            nameof(SandboxAgentStatCalculateModel.GetDismountResistance))]
+        private static void StaySeated(Agent agent, ref float __result) => Steady(agent, ref __result);
+
+        private static void Steady(Agent agent, ref float result)
+        {
+            Guard.Touch("Footing");
+
+            try
+            {
+                if (!AttributeBonus.Active() || agent == null || result <= 0f) return;
+
+                var control = AttributeBonus.Of(AttributeBonus.HeroOf(agent), DefaultCharacterAttributes.Control);
+                if (control > 0) result *= 1f + AttributeBonus.ControlFooting * control;
+            }
+            catch
+            {
+                // Read for every blow that might move someone; a missing bonus beats a throw.
             }
         }
     }
