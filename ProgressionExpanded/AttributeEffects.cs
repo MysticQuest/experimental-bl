@@ -59,7 +59,9 @@ namespace ProgressionExpanded
             internal string At(int value) => $"+{Amount(_perPoint * value, Whole)} {_name} ({Rate})";
 
             /// <summary>What a point is worth, for a card with no value to show yet.</summary>
-            internal string PerPoint => $"{_name} {Rate}";
+            internal string PerPoint => Whole
+                ? $"+1 {_name} per {_pointsPerUnit} pts"
+                : $"{Rate} {_name}";
 
             /// <summary>The rate alone, as it reads in brackets behind a total.</summary>
             private string Rate => Whole
