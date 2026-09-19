@@ -14,10 +14,10 @@ namespace ProgressionExpanded
     /// millions of XP: an afternoon at the practice ring buys nothing a player can see, which
     /// makes the one safe way to train also the one pointless way.
     ///
-    /// A third and two thirds keep the ordering vanilla intended - a real fight is still worth
-    /// most, a tournament next, practice least - while putting both within sight of it. Nobody
-    /// will grind a skill to 330 in the ring at a third rate, but a morning there is no longer
-    /// wasted.
+    /// Both are sliders, defaulting to a third and two thirds. Those keep the ordering vanilla
+    /// intended - a real fight worth most, a tournament next, practice least - while putting both
+    /// within sight of it. Nobody grinds a skill to 330 in the ring at a third rate, but a
+    /// morning there is no longer wasted.
     ///
     /// The method is private and static, which Harmony patches happily; it is the base model's,
     /// so the Naval DLC's own model gets the new figures too, since that one decorates rather
@@ -27,12 +27,6 @@ namespace ProgressionExpanded
     internal static class PracticeXpPatch
     {
         private const string Model = "TaleWorlds.CampaignSystem.GameComponents.DefaultCombatXpModel";
-
-        /// <summary>A third of a real fight, up from a sixteenth.</summary>
-        private const float Practice = 0.33f;
-
-        /// <summary>Two thirds, up from a third.</summary>
-        private const float Tournament = 0.66f;
 
         private static bool Prepare() => Target() != null;
 
@@ -48,10 +42,13 @@ namespace ProgressionExpanded
 
             try
             {
-                if (!Mod.On || !(Settings.Instance?.Enabled ?? true)) return;
+                var settings = Settings.Instance;
+                if (!Mod.On || settings == null) return;
 
-                if (missionType == CombatXpModel.MissionTypeEnum.PracticeFight) __result = Practice;
-                else if (missionType == CombatXpModel.MissionTypeEnum.Tournament) __result = Tournament;
+                if (missionType == CombatXpModel.MissionTypeEnum.PracticeFight)
+                    __result = settings.PracticeXpRate;
+                else if (missionType == CombatXpModel.MissionTypeEnum.Tournament)
+                    __result = settings.TournamentXpRate;
             }
             catch (Exception exception)
             {

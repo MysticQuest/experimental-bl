@@ -152,6 +152,16 @@ namespace ProgressionExpanded
 
         // --- Skill XP rates. 1.0 is the game's own award rate; higher pays more per event. ---
 
+        [SettingPropertyFloatingInteger("Practice fights", 0f, 1f, "0.00", Order = 100, RequireRestart = false,
+            HintText = "What a hit in the practice ring is worth against the same hit in a real battle. Vanilla pays 0.06, which is a rounding error next to what a skill level costs here.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 3)]
+        public float PracticeXpRate { get; set; } = 0.33f;
+
+        [SettingPropertyFloatingInteger("Tournaments", 0f, 1f, "0.00", Order = 101, RequireRestart = false,
+            HintText = "The same, for a tournament. Vanilla pays 0.33.")]
+        [SettingPropertyGroup(Rates, GroupOrder = 3)]
+        public float TournamentXpRate { get; set; } = 0.66f;
+
         [SettingPropertyFloatingInteger("One Handed", 1f, 10f, "0.00", Order = 0, RequireRestart = false,
             HintText = "Earns per combat hit.")]
         [SettingPropertyGroup(Rates, GroupOrder = 3)]
