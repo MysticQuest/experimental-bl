@@ -385,6 +385,11 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
+        [SettingPropertyButton("Finish the tutorial", Content = "Finish", Order = 11, RequireRestart = false,
+            HintText = "Ends the village stealth tutorial where you stand, exactly as finishing it would. For testing what the villagers hand over without playing it through each time.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
+        public Action FinishTutorial { get; set; } = TutorialShortcut.Finish;
+
         [SettingPropertyButton("Save character*", Content = "Save", Order = 9, RequireRestart = false,
             HintText = "Saves name, face, height, weight, build, attributes, focus and skills, so you need only make a character once. * Not saved: voice, age, culture and anything you own.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
