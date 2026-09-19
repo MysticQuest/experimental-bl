@@ -4,23 +4,40 @@ using TaleWorlds.CampaignSystem.GameComponents;
 using TaleWorlds.Core;
 using TaleWorlds.Localization;
 
-namespace MasteryCurve
+namespace ProgressionExpanded
 {
     /// <summary>
     /// Replaces vanilla's progression numbers while keeping vanilla's mechanism: the ceiling
     /// still emerges where the learning rate runs out, rather than being clamped anywhere.
     /// </summary>
-    public sealed class MasteryCurveModel : DefaultCharacterDevelopmentModel
+    public sealed class ProgressionModel : DefaultCharacterDevelopmentModel
     {
         private static readonly TextObject AttributeText = new TextObject("{=MC001}Attribute");
         private static readonly TextObject FocusText = new TextObject("{=MC002}Focus");
         private static readonly TextObject OverLimitText = new TextObject("{=MC003}Beyond your limit");
+        private static readonly TextObject IntelligenceText = new TextObject("{=MC004}Intelligence");
 
-        public override int MaxFocusPerSkill => Settings.Instance?.MaxFocusPerSkill ?? 10;
+        public override int MaxFocusPerSkill { get { Guard.Touch("Model.MaxFocusPerSkill"); return Settings.Instance?.MaxFocusPerSkill ?? 10; } }
 
-        public override int GetXpRequiredForSkillLevel(int skillLevel) => Curve.SkillXpRequired(skillLevel);
+        public override int FocusPointsPerLevel { get { Guard.Touch("Model.FocusPerLevel"); return Math.Max(1, Settings.Instance?.FocusPointsPerLevel ?? 1); } }
 
-        public override int SkillsRequiredForLevel(int level) => Curve.CharacterXpRequired(level);
+        public override int LevelsPerAttributePoint { get { Guard.Touch("Model.LevelsPerAttribute"); return Math.Max(1, Settings.Instance?.LevelsPerAttributePoint ?? 4); } }
+
+        public override int GetXpRequiredForSkillLevel(int skillLevel)
+        {
+            Guard.Touch("Model.SkillXp");
+            Probe.Count("SkillXp", skillLevel);
+            try { return Curve.SkillXpRequired(skillLevel); }
+            catch (Exception exception) { Guard.Report("Model.SkillXp", exception); return base.GetXpRequiredForSkillLevel(skillLevel); }
+        }
+
+        public override int SkillsRequiredForLevel(int level)
+        {
+            Guard.Touch("Model.CharacterXp");
+            Probe.Count("CharacterXp", level);
+            try { return Curve.CharacterXpRequired(level); }
+            catch (Exception exception) { Guard.Report("Model.CharacterXp", exception); return base.SkillsRequiredForLevel(level); }
+        }
 
         public override ExplainedNumber CalculateLearningLimit(
             IReadOnlyPropertyOwner<CharacterAttribute> characterAttributes,
@@ -28,6 +45,8 @@ namespace MasteryCurve
             SkillObject skill,
             bool includeDescriptions = false)
         {
+            Guard.Touch("Model.LearningLimit");
+            Probe.Count("LearningLimit", focusValue);
             var result = new ExplainedNumber(0f, includeDescriptions, null);
             result.Add(Curve.LimitValue(AverageAttribute(characterAttributes, skill), focusValue), AttributeText, null);
             result.LimitMin(0f);
@@ -41,6 +60,8 @@ namespace MasteryCurve
             SkillObject skill,
             bool includeDescriptions = false)
         {
+            Guard.Touch("Model.LearningRate");
+            Probe.Count("LearningRate", skillValue);
             var attribute = AverageAttribute(characterAttributes, skill);
             var slope = Settings.Instance?.PenaltySlope ?? 0.09f;
 
@@ -57,6 +78,24 @@ namespace MasteryCurve
                 var penalty = 1f + slope * (skillValue - limit);
                 var survived = Math.Max(baseFactor * Curve.RateFloor, baseFactor - penalty);
                 result.AddFactor(survived - baseFactor, includeDescriptions ? OverLimitText : null);
+            }
+
+            // Intelligence lifts every skill, not just the three it governs. Applied as a true
+            // multiplier on what the rest of the rules produced: AddFactor feeds one shared sum,
+            // so scaling by the running total is what makes this a clean percentage rather than
+            // a number whose worth depends on how good the skill already was.
+            if (AttributeBonus.Active())
+            {
+                var intelligence = characterAttributes == null
+                    ? 0f
+                    : characterAttributes.GetPropertyValue(DefaultCharacterAttributes.Intelligence);
+
+                if (intelligence > 0f)
+                {
+                    var boost = AttributeBonus.IntelligenceLearning * intelligence;
+                    result.AddFactor(boost * (1f + result.SumOfFactors),
+                                     includeDescriptions ? IntelligenceText : null);
+                }
             }
 
             result.LimitMin(1.25f * Curve.RateFloor);
