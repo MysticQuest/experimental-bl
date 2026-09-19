@@ -45,7 +45,14 @@ namespace ProgressionExpanded
                 var lines = LinesFor(attribute, __instance.AttributeValue);
                 if (lines.Count == 0) return;
 
-                var block = string.Join(Environment.NewLine, lines.ToArray());
+                // The leading blank line is the gap above the block. The card has its own spacing
+                // there, but it is the first thing the layout gives up when the panel is full --
+                // Control's description runs to four lines rather than three, and that one extra
+                // line was enough to leave the bonuses sitting directly against the icon captions
+                // while every other attribute had room. Spelling the gap out makes it the same
+                // everywhere instead of a function of how long vanilla's description happens to be.
+                var block = Environment.NewLine
+                            + string.Join(Environment.NewLine, lines.ToArray());
                 var current = __instance.IncreaseHelpText ?? string.Empty;
 
                 // Vanilla's sentence is restored by every refresh, so this only guards against two
