@@ -385,6 +385,16 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
+        [SettingPropertyButton("Save this character", Content = "Save", Order = 9, RequireRestart = false,
+            HintText = "Writes your character - name, face, attributes, focus and skills - to a file beside the settings. Making the same character again for every test campaign is the slow part of testing anything that only happens on a new one.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
+        public Action SaveCharacter { get; set; } = CharacterTemplate.Save;
+
+        [SettingPropertyButton("Load that character", Content = "Load", Order = 10, RequireRestart = false,
+            HintText = "Stamps the saved character onto whoever you are playing now. Make any character at all, press this, and you are the one you saved. A development tool: it writes straight to the hero, which is fine on a test campaign and not something to do to a real one.")]
+        [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
+        public Action LoadCharacter { get; set; } = CharacterTemplate.Load;
+
         [SettingPropertyButton("Bonus report", Content = "Check", Order = 8, RequireRestart = false,
             HintText = "Reports whether the patches bound and what the attribute card should be showing. Use this if the bonus lines are missing.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
