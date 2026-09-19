@@ -143,8 +143,18 @@ namespace ProgressionExpanded
             var head = hero.BattleEquipment[EquipmentIndex.Head].Item;
             if (body == cloth && head == null) return;
 
+            // Names whatever turned up, because the source of it is still unidentified: the log
+            // is the only thing that can say which quest or handler put it there.
+            var appeared = new List<string>();
+            for (var slot = EquipmentIndex.WeaponItemBeginSlot; slot < EquipmentIndex.NumEquipmentSetSlots; slot++)
+            {
+                var item = hero.BattleEquipment[slot].Item;
+                if (item != null && item != cloth) appeared.Add(slot + "=" + item.StringId);
+            }
+
             Rekit(false);
-            Log.Write("Burlap sack: something dressed the hero again; the sack is back on");
+            Log.Write("Burlap sack: something dressed the hero again; taking back "
+                      + (appeared.Count > 0 ? string.Join(", ", appeared.ToArray()) : "nothing nameable"));
         }
 
         /// <summary>Real time, so anything handed over lands back on the floor the same second.</summary>
