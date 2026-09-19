@@ -42,8 +42,8 @@ namespace ProgressionExpanded
         /// <summary>The plainest blade in the game: it is called Knife and nothing else.</summary>
         internal const string Knife = "gladius_b";
 
-        /// <summary>Two points of leg armour, and the worst pair not named after a lady.</summary>
-        internal const string Shoes = "southern_moccasins";
+        /// <summary>The weakest boots the Empire makes, at four points of leg armour.</summary>
+        internal const string Shoes = "folded_town_boots";
 
         /// <summary>
         /// Set when a new campaign strips, cleared by the sweep that follows it an hour later.
@@ -63,6 +63,9 @@ namespace ProgressionExpanded
 
         /// <summary>The live behaviour, so the map-ready patch can reach it.</summary>
         internal static DestituteStartBehavior? Current { get; private set; }
+
+        /// <summary>Whether the opening is still handing things out.</summary>
+        internal bool WindowOpen => _sweepPending && Mod.On && (Settings.Instance?.StartWithNothing ?? false);
 
         public override void RegisterEvents()
         {
@@ -210,7 +213,8 @@ namespace ProgressionExpanded
             }
 
             SweepInventory();
-            Log.Write("Burlap sack: trimmed the tutorial reward to a knife and a pair of shoes");
+            Log.Write($"Burlap sack: tutorial reward trimmed to {knife?.Name} (tier {knife?.Tier}) "
+                      + $"and {shoes?.Name} (tier {shoes?.Tier})");
         }
 
         private static ItemObject? Item(string id) => MBObjectManager.Instance?.GetObject<ItemObject>(id);
@@ -305,6 +309,41 @@ namespace ProgressionExpanded
             catch (Exception exception)
             {
                 Guard.Report("TutorialReward", exception);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Refuses gold outright while the opening is still handing things out.
+    /// </summary>
+    /// <remarks>
+    /// Taking the purse back a moment later worked, but the player saw it: a thousand denars sat
+    /// on the world map for as long as it took the next sweep to run. Every gold change routes
+    /// through here, so a handout during the window is simply declined and the number never
+    /// moves off zero.
+    ///
+    /// Only while the window is open, which closes at the first hourly tick. After that the
+    /// player can actually earn money, and refusing it would be a different feature entirely.
+    /// </remarks>
+    [HarmonyPatch(typeof(Hero), nameof(Hero.ChangeHeroGold))]
+    internal static class RefuseGoldPatch
+    {
+        [HarmonyPrefix]
+        private static void Decline(Hero __instance, ref int changeAmount)
+        {
+            Guard.Touch("RefuseGold");
+
+            try
+            {
+                if (changeAmount <= 0 || __instance != Hero.MainHero) return;
+                if (DestituteStartBehavior.Current?.WindowOpen != true) return;
+
+                Log.Write($"Burlap sack: declined {changeAmount} gold before it arrived");
+                changeAmount = 0;
+            }
+            catch (Exception exception)
+            {
+                Guard.Report("RefuseGold", exception);
             }
         }
     }
