@@ -385,11 +385,6 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
-        [SettingPropertyButton("Win the mission", Content = "Win", Order = 13, RequireRestart = false,
-            HintText = "Routs whoever is fighting you, so the battle ends as a victory and pays what a victory pays. Use this rather than Leave when the point is to see the reward.")]
-        [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
-        public Action WinMission { get; set; } = TutorialShortcut.Win;
-
         [SettingPropertyButton("End the mission", Content = "Leave", Order = 12, RequireRestart = false,
             HintText = "Ends whatever scene is running and returns you to the world map. It ends the mission rather than winning it, so a reward that depends on finishing properly will not arrive.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
