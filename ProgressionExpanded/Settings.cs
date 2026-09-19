@@ -386,7 +386,7 @@ namespace ProgressionExpanded
         public Action ResetPoints { get; set; } = DebugTools.ResetPoints;
 
         [SettingPropertyButton("Save this character", Content = "Save", Order = 9, RequireRestart = false,
-            HintText = "Writes your character - name, face, attributes, focus and skills - to a file beside the settings. Making the same character again for every test campaign is the slow part of testing anything that only happens on a new one.")]
+            HintText = "Writes your character to a file beside the settings: name, face, height, weight, build, attributes, focus and skills. Voice may or may not come with it - it has no setting of its own, so it travels only if the game keeps it in the face key. Making the same character again for every test campaign is the slow part of testing anything that only happens on a new one.")]
         [SettingPropertyGroup(DebugGroup, GroupOrder = 8)]
         public Action SaveCharacter { get; set; } = CharacterTemplate.Save;
 
