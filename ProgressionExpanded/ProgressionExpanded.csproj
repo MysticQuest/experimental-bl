@@ -42,13 +42,32 @@
            Text="MCM v5 not found at $(McmModuleDir). Subscribe to Mod Configuration Menu v5 on the Steam Workshop, or override WorkshopFolder in Directory.Build.props.user." />
   </Target>
 
+  <!--
+    A build for testing installs as its own module, so it can sit beside the copy subscribed from
+    the Workshop without the two claiming the same id. Publishing passes DevDeploy=false and gets
+    the real one.
+  -->
+  <PropertyGroup>
+    <DevDeploy Condition="'$(DevDeploy)' == ''">true</DevDeploy>
+    <DeployedName Condition="'$(DevDeploy)' == 'true'">$(ModuleName)Dev</DeployedName>
+    <DeployedName Condition="'$(DevDeploy)' != 'true'">$(ModuleName)</DeployedName>
+  </PropertyGroup>
+
   <Target Name="CopyModuleToGame" AfterTargets="Build">
     <PropertyGroup>
-      <ModuleDir>$(GameFolder)\Modules\$(ModuleName)</ModuleDir>
+      <ModuleDir>$(GameFolder)\Modules\$(DeployedName)</ModuleDir>
+      <StagedManifest>$(ModuleDir)\SubModule.xml</StagedManifest>
     </PropertyGroup>
     <MakeDir Directories="$(ModuleDir)\bin\Win64_Shipping_Client" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" />
     <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\_Module\SubModule.xml" DestinationFolder="$(ModuleDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\_Module\SubModule.xml" DestinationFolder="$(ModuleDir)" />
+
+    <!-- The id has to match the folder, or the launcher lists a module it cannot load. -->
+    <WriteLinesToFile
+      Condition="'$(DevDeploy)' == 'true'"
+      File="$(StagedManifest)"
+      Lines="$([System.IO.File]::ReadAllText($(StagedManifest)).Replace('&lt;Id value=&quot;$(ModuleName)&quot;','&lt;Id value=&quot;$(DeployedName)&quot;').Replace('Progression Expanded','Progression Expanded (dev)'))"
+      Overwrite="true" />
   </Target>
 </Project>

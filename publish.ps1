@@ -51,7 +51,7 @@ if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 
 Write-Host "Building $Module into $staging" -ForegroundColor Cyan
 dotnet build (Join-Path $root "$Module\$Module.csproj") -c Release -p:Platform=x64 `
-    -p:GameFolder=$staging -p:WorkshopFolder=$WorkshopFolder
+    -p:GameFolder=$staging -p:WorkshopFolder=$WorkshopFolder -p:DevDeploy=false
 if ($LASTEXITCODE -ne 0) { throw 'Build failed; nothing staged.' }
 
 # What the game needs to load the module at all. If either is missing the upload
