@@ -53,6 +53,16 @@
     <DeployedName Condition="'$(DevDeploy)' != 'true'">$(ModuleName)</DeployedName>
   </PropertyGroup>
 
+  <!--
+    A published build carries no symbols; a testing build keeps them, because it never
+    leaves this machine.
+  -->
+  <PropertyGroup Condition="'$(DevDeploy)' != 'true'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
   <Target Name="CopyModuleToGame" AfterTargets="Build">
     <PropertyGroup>
       <ModuleDir>$(GameFolder)\Modules\$(DeployedName)</ModuleDir>
@@ -60,7 +70,7 @@
     </PropertyGroup>
     <MakeDir Directories="$(ModuleDir)\bin\Win64_Shipping_Client" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModuleDir)\bin\Win64_Shipping_Client" SkipUnchangedFiles="true" Condition="'$(DevDeploy)' == 'true' And Exists('$(TargetDir)$(TargetName).pdb')" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)\_Module\SubModule.xml" DestinationFolder="$(ModuleDir)" />
 
     <!-- The id has to match the folder, or the launcher lists a module it cannot load. -->

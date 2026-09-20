@@ -11,7 +11,7 @@ namespace ProgressionExpanded
 {
     public class SubModule : MBSubModuleBase
     {
-        private const string HarmonyId = "MysticQuest.ProgressionExpanded";
+        private const string HarmonyId = "ProgressionExpanded";
 
         /// <summary>What character creation hands out. Those levels are never earned in play.</summary>
         private const int StartingSkill = 30;

@@ -1,14 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  First upload only. This creates a brand new Workshop item every time it runs, so
-  once it has succeeded, switch to WorkshopUpdate.xml and put the new id in it.
-
-  The Workshop item's TITLE is not set here: it is taken from <Name> in the module's
-  SubModule.xml, which is "Progression Expanded".
-
-  ModuleFolder is the staging folder that publish.ps1 builds. Run the script rather
-  than pointing this at the live game folder, so what ships is only what was built.
--->
 <Tasks>
     <CreateItem/>
     <UpdateItem>

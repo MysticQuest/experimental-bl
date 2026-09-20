@@ -1,14 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Every upload after the first. Put the id from the Workshop URL into ItemId once,
-  then the only thing that changes between releases is ChangeNotes.
-
-  Bump <Version> in _Module/SubModule.xml before each upload: the Workshop will not
-  do it for you, and it is the number people quote when they report a problem.
--->
 <Tasks>
     <GetItem>
-        <ItemId Value="0000000000"/>
+        <ItemId Value="3804760531"/>
     </GetItem>
     <UpdateItem>
         <ModuleFolder Value="X:\Repositories\Steam Mods\publish\Modules\ProgressionExpanded"/>
@@ -19,5 +11,6 @@
             <Tag Value="Singleplayer" />
             <Tag Value="v1.4.8" />
         </Tags>
+        <Image Value="X:\Repositories\Steam Mods\ProgressionExpanded\_Publish\preview.png"/>
     </UpdateItem>
 </Tasks>
