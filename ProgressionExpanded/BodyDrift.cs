@@ -1,10 +1,6 @@
 using System;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.MapEvents;
-using TaleWorlds.CampaignSystem.Party;
-using TaleWorlds.CampaignSystem.Settlements;
-using TaleWorlds.CampaignSystem.Siege;
 using TaleWorlds.Core;
 
 namespace ProgressionExpanded
@@ -14,9 +10,8 @@ namespace ProgressionExpanded
     /// </summary>
     /// <remarks>
     /// Vanilla already drifts the player daily, in <c>DynamicBodyCampaignBehavior</c>: build rises
-    /// while you are fighting and decays while you are not, weight rises while you are in town and
-    /// falls on the road. That is worth keeping, and is kept - this runs after it, not instead of
-    /// it, and reapplies vanilla's own step before adding anything.
+    /// while you are fighting and decays while you are not. That is worth keeping, and is kept -
+    /// this runs after it, not instead of it, and reapplies vanilla's own step before scaling it.
     ///
     /// What is not kept is its clamp on build. Vanilla holds it to thirty percent either side of
     /// what character creation rolled, so a character created slight can never train into a heavy
@@ -24,9 +19,7 @@ namespace ProgressionExpanded
     /// reach for half of all starting characters. Build is freed across the whole range, and
     /// Athletics multiplies the days it climbs.
     ///
-    /// Weight follows vanilla apart from two things: the band is half either side of what character
-    /// creation rolled rather than vanilla's thirty percent, and a day spent fighting or at the
-    /// forge does not put weight on you.
+    /// Weight is not touched at all: vanilla's own handling of it stands, band and all.
     ///
     /// Nothing here is allowed to throw. Every entry point is wrapped, every figure is checked for
     /// NaN, and the result is clamped to the engine's own 0..1 whatever the settings say - a body
@@ -35,8 +28,8 @@ namespace ProgressionExpanded
     /// </remarks>
     internal static class BodyDrift
     {
-        /// <summary>The middle of the weight bar, which training settles you toward.</summary>
-        internal const float WeightCentre = 0.5f;
+        /// <summary>The value anything unusable falls back to.</summary>
+        private const float Neutral = 0.5f;
 
         internal const string BehaviorName =
             "TaleWorlds.CampaignSystem.CampaignBehaviors.DynamicBodyCampaignBehavior";
@@ -47,24 +40,36 @@ namespace ProgressionExpanded
         /// <summary>Athletics at or above this counts double. Fixed: the feature has no dials.</summary>
         internal const int TrainingCap = 200;
 
+        /// <summary>
+        /// The share of vanilla's daily build figures this mod uses, both directions alike.
+        /// </summary>
+        /// <remarks>
+        /// A share, not a rate: vanilla's +0.025 and -0.015 are multiplied by it, giving roughly
+        /// +0.0076 and -0.0046 a day here.
+        ///
+        /// Vanilla moves build fast enough that a fighting character reaches the top of the bar
+        /// inside a month, which makes the muscular tier the default state of any campaign rather
+        /// than something a character grew into. Solved instead so that a fully trained character
+        /// fighting on seven days in ten crosses the whole bar in one campaign year - 84 days, at
+        /// 7 days to the week and 3 weeks to the season. An untrained one takes three years, so
+        /// the training multiplier decides whether you get there at all rather than merely when.
+        ///
+        /// Both directions are scaled by the same figure deliberately. Shrinking the gain alone
+        /// would leave the decay many times larger than a day's climbing, and build could never
+        /// rise at all.
+        /// </remarks>
+        internal const float DriftShare = 0.304f;
+
         /// <summary>What one point of Vigor adds to what Athletics is worth.</summary>
         internal const float VigorShare = 0.05f;
 
-        /// <summary>How far weight may stray either side of what character creation rolled.</summary>
-        internal const float WeightSpread = 0.5f;
 
         private const float FallbackBuildIncrease = 0.025f;
         private const float FallbackBuildDecrease = -0.015f;
-        private const float FallbackWeightIncrease = 0.025f;
-        private const float FallbackWeightDecrease = -0.025f;
-        private const float FallbackWeightStarving = -0.1f;
 
         private static bool _read;
         private static float _buildIncrease = FallbackBuildIncrease;
         private static float _buildDecrease = FallbackBuildDecrease;
-        private static float _weightIncrease = FallbackWeightIncrease;
-        private static float _weightDecrease = FallbackWeightDecrease;
-        private static float _weightStarving = FallbackWeightStarving;
 
         internal static Type? Behavior
         {
@@ -78,8 +83,6 @@ namespace ProgressionExpanded
         /// <summary>The daily build step vanilla would apply, as a positive magnitude.</summary>
         internal static float BuildIncrease { get { ReadVanillaFigures(); return _buildIncrease; } }
 
-        /// <summary>The daily weight step vanilla would apply, as a positive magnitude.</summary>
-        internal static float WeightIncrease { get { ReadVanillaFigures(); return _weightIncrease; } }
 
         /// <summary>
         /// Pulls vanilla's five daily constants out of the shipped behavior.
@@ -106,12 +109,8 @@ namespace ProgressionExpanded
 
                 _buildIncrease = Constant(type, "DailyBuildIncrease", FallbackBuildIncrease);
                 _buildDecrease = Constant(type, "DailyBuildDecrease", FallbackBuildDecrease);
-                _weightIncrease = Constant(type, "DailyWeightIncrease", FallbackWeightIncrease);
-                _weightDecrease = Constant(type, "DailyWeightDecreaseWhenNotStarving", FallbackWeightDecrease);
-                _weightStarving = Constant(type, "DailyWeightDecreaseWhenStarving", FallbackWeightStarving);
 
-                Log.Write($"Body drift: vanilla figures build +{_buildIncrease}/{_buildDecrease}, "
-                          + $"weight +{_weightIncrease}/{_weightDecrease}/{_weightStarving}");
+                Log.Write($"Body drift: vanilla build figures +{_buildIncrease}/{_buildDecrease}");
             }
             catch (Exception exception)
             {
@@ -137,19 +136,12 @@ namespace ProgressionExpanded
             }
         }
 
-        /// <summary>Vanilla's weight step for today, recomputed from its own conditions.</summary>
-        internal static float VanillaWeightStep(bool visitedSettlement, bool starving, bool inSettlement)
-        {
-            ReadVanillaFigures();
-            if (starving && !inSettlement) return _weightStarving;
-            return visitedSettlement ? _weightIncrease : _weightDecrease;
-        }
 
-        /// <summary>Vanilla's build step for today.</summary>
+        /// <summary>Vanilla's build step for today, at this mod's slower pace.</summary>
         internal static float VanillaBuildStep(bool foughtRecently)
         {
             ReadVanillaFigures();
-            return foughtRecently ? _buildIncrease : _buildDecrease;
+            return (foughtRecently ? _buildIncrease : _buildDecrease) * DriftShare;
         }
 
         /// <summary>
@@ -182,46 +174,12 @@ namespace ProgressionExpanded
             catch (Exception exception) { Guard.Report("BodyDrift.TrainingMultiplier", exception); return 1f; }
         }
 
-        /// <summary>
-        /// The band a value is allowed to sit in, with the anchor falling back when it is unusable.
-        /// </summary>
-        /// <remarks>
-        /// Vanilla seeds its anchors to -1 and only fills them on character creation, a body edit,
-        /// or a change of player character. On a save where none of those has fired, the anchor is
-        /// still -1 and vanilla's own band comes out as min 0 against max -1.3 - a floor above its
-        /// own ceiling. An unusable anchor therefore falls back to what the hero currently is,
-        /// which is always a sane centre, and to the middle of the bar if even that is broken.
-        /// </remarks>
-        private static void Band(float anchor, float current, float spread, out float min, out float max)
-        {
-            if (!Usable(anchor) || anchor <= 0f) anchor = current;
-            if (!Usable(anchor) || anchor <= 0f) anchor = WeightCentre;
-            if (!Usable(spread) || spread < 0f) spread = 0.5f;
 
-            min = Math.Max(0f, anchor * (1f - spread));
-            max = Math.Min(1f, anchor * (1f + spread));
-
-            // A band inverts once spread passes one; nearest-in-bounds still needs an order.
-            if (min > max) { var swap = min; min = max; max = swap; }
-        }
-
-        /// <summary>Moves a value by a step and settles it at the nearest point inside the band.</summary>
-        internal static float Settle(float value, float step, float anchor, float spread)
-        {
-            if (!Usable(value)) return WeightCentre;
-            if (!Usable(step)) step = 0f;
-
-            var moved = value + step;
-            if (!Usable(moved)) return Clamp01(value);
-
-            Band(anchor, value, spread, out var min, out var max);
-            return Clamp01(Math.Min(Math.Max(moved, min), max));
-        }
 
         /// <summary>Build is free across the whole range; only the engine's own bounds apply.</summary>
         internal static float SettleBuild(float value, float step)
         {
-            if (!Usable(value)) return WeightCentre;
+            if (!Usable(value)) return Neutral;
             if (!Usable(step)) step = 0f;
 
             var moved = value + step;
@@ -234,6 +192,6 @@ namespace ProgressionExpanded
             value.HasValue && Usable(value.Value) ? value.Value : fallback;
 
         private static float Clamp01(float value) =>
-            Usable(value) ? Math.Min(1f, Math.Max(0f, value)) : WeightCentre;
+            Usable(value) ? Math.Min(1f, Math.Max(0f, value)) : Neutral;
     }
 }
