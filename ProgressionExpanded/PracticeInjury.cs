@@ -3,8 +3,6 @@ using System.Reflection;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
-using TaleWorlds.Library;
-using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
 
 namespace ProgressionExpanded
@@ -61,11 +59,8 @@ namespace ProgressionExpanded
                 lost = hero.HitPoints - left;
                 hero.HitPoints = left;
 
+                // No notification: the health bar is the notification.
                 Log.Write($"Practice: lost {lost} health going down, {left} of {hero.MaxHitPoints} left");
-
-                var message = new TextObject("{=MCprac}You are helped out of the ring, {LOST} the worse for it.");
-                message.SetTextVariable("LOST", lost);
-                InformationManager.DisplayMessage(new InformationMessage(message.ToString()));
             }
             catch (Exception exception)
             {
