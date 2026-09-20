@@ -33,7 +33,7 @@ namespace ProgressionExpanded
         internal const float VigorIllness = 0.01f;         // share off the death-by-illness roll
         internal const float ControlHandling = 0.01f;      // weapon handling
         internal const float ControlStagger = 0.01f;       // damage needed to stagger you
-        internal const float ControlGuard = 0.01f;         // recovery after a block, both ways
+        internal const float ControlPenetration = 0.01f;   // armour penetration, bow and crossbow
         internal const float ControlFooting = 0.01f;       // knocked back, down or out of the saddle
         internal const float EnduranceMountSpeed = 0.01f;  // horse speed
         internal const float EnduranceRunSpeed = 0.01f;    // running speed
@@ -218,7 +218,15 @@ namespace ProgressionExpanded
 
                 var control = AttributeBonus.Of(hero, DefaultCharacterAttributes.Control);
                 if (control > 0)
+                {
                     agentDrivenProperties.HandlingMultiplier *= 1f + AttributeBonus.Rate(AttributeBonus.ControlHandling) * control;
+
+                    // Added rather than multiplied: the game leaves these at their default and
+                    // the one thing that touches them - a Naval figurehead - adds to them too.
+                    var pierce = AttributeBonus.Rate(AttributeBonus.ControlPenetration) * control;
+                    agentDrivenProperties.ArmorPenetrationMultiplierBow += pierce;
+                    agentDrivenProperties.ArmorPenetrationMultiplierCrossbow += pierce;
+                }
 
                 var onFoot = AttributeBonus.Of(hero, DefaultCharacterAttributes.Endurance);
                 if (onFoot > 0)
@@ -312,46 +320,6 @@ namespace ProgressionExpanded
             catch
             {
                 // Never throw on a damage tick.
-            }
-        }
-    }
-
-    /// <summary>
-    /// Control is how fast your guard comes back after you stop something.
-    /// </summary>
-    /// <remarks>
-    /// A blocked blow freezes both men for a moment. The defender's share of that is the half
-    /// second that gets people killed - the block held, and the counter was too late anyway.
-    /// Control shortens yours and lengthens theirs, so stopping a blow starts to be worth
-    /// something rather than merely not costing you anything.
-    ///
-    /// Both sides are read from the defender's Control, because both are the same act: it is
-    /// their guard that absorbed the blow and their weapon that recovers from it. Every weapon
-    /// qualifies, shield or not, which is what the handling and stagger bonuses cannot claim.
-    /// </remarks>
-    [HarmonyPatch(typeof(SandboxAgentApplyDamageModel),
-        nameof(SandboxAgentApplyDamageModel.CalculateDefendedBlowStunMultipliers))]
-    internal static class ControlGuardPatch
-    {
-        [HarmonyPostfix]
-        private static void Recover(Agent defenderAgent, ref float attackerStunPeriod, ref float defenderStunPeriod)
-        {
-            Guard.Touch("BlockRecovery");
-
-            try
-            {
-                if (!AttributeBonus.Active() || defenderAgent == null) return;
-
-                var control = AttributeBonus.Of(AttributeBonus.HeroOf(defenderAgent), DefaultCharacterAttributes.Control);
-                if (control <= 0) return;
-
-                var share = AttributeBonus.Rate(AttributeBonus.ControlGuard) * control;
-                defenderStunPeriod *= Math.Max(0.5f, 1f - share);
-                attackerStunPeriod *= 1f + share;
-            }
-            catch
-            {
-                // Never throw mid-blow.
             }
         }
     }

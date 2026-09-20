@@ -148,7 +148,7 @@ namespace ProgressionExpanded
             // by ref, which is the shape most likely to be mis-wrapped.
             "VigorHitPointsPatch", "AttributeCardPatch", "CharacterCreationAttributeCardPatch",
             "ControlStaggerPatch", "VigorMomentumPatch", "VigorKnockbackPatch",
-            "ControlGuardPatch", "ControlFootingPatch"
+            "ControlFootingPatch"
         };
 
         private static void ApplyPatches(Harmony harmony)

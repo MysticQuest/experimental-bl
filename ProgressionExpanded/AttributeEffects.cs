@@ -105,7 +105,8 @@ namespace ProgressionExpanded
                 {
                     new Effect("weapon handling", AttributeBonus.Rate(AttributeBonus.ControlHandling), percent: true),
                     new Effect("stagger resistance", AttributeBonus.Rate(AttributeBonus.ControlStagger), percent: true),
-                    new Effect("faster recovery after blocking", AttributeBonus.Rate(AttributeBonus.ControlGuard), percent: true),
+                    new Effect("armour penetration with bow and crossbow",
+                        AttributeBonus.Rate(AttributeBonus.ControlPenetration), percent: true),
                     new Effect("resistance to knocks and dismounts", AttributeBonus.Rate(AttributeBonus.ControlFooting), percent: true),
                 };
 
