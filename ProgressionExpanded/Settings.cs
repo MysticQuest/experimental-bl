@@ -39,10 +39,11 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool StartWithNothing { get; set; } = true;
 
-        [SettingPropertyBool("Practice fights cost health", Order = 6, RequireRestart = true,
-            HintText = "Going down in the practice ring takes a fifth of your health, and it does not come back when you stand up. Five knockdowns and there is nothing left; long before that the wound threshold puts you out of the ring until you have healed. Without it, paying a real rate for practice makes the ring the obvious way to train everything.")]
+        [SettingPropertyInteger("Health lost going down in practice", 0, 100, "0", Order = 6,
+            RequireRestart = true,
+            HintText = "Percent of your full health taken each time you are knocked down in the practice ring, and it does not come back when you stand up. At 20 you are out after five; at 0 practice is free, as it is in vanilla. The wound threshold stops you long before nothing is left.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
-        public bool PracticeInjuries { get; set; } = true;
+        public int PracticeInjury { get; set; } = 20;
 
         [SettingPropertyFloatingInteger("Practice fight XP rate", 0f, 1f, "0.00", Order = 7, RequireRestart = false,
             HintText = "What a hit in the practice ring is worth against the same hit in a real battle. Vanilla pays 0.06, which is a rounding error next to what a skill level costs here.")]

@@ -15,9 +15,10 @@ namespace ProgressionExpanded
     /// cost is the time. Paying a third rate for it - as this mod now does - would make the ring
     /// the obvious way to train every skill, with nothing to stop a player spending a week there.
     ///
-    /// A fifth of your health per knockdown is what stops it. Five in a row and there is nothing
-    /// left to lose, and long before that the wound threshold takes you out of the ring until you
-    /// have healed. It is the same limit a real fight imposes, only without the dying.
+    /// A share of your health per knockdown is what stops it - a fifth by default, so five in a
+    /// row leave nothing, and long before that the wound threshold takes you out of the ring until
+    /// you have healed. It is the same limit a real fight imposes, only without the dying. At zero
+    /// the ring is free again, as it is in vanilla.
     ///
     /// Health is never taken below one point: the ring should end a training session, not a
     /// campaign.
@@ -26,9 +27,6 @@ namespace ProgressionExpanded
     internal static class PracticeInjuryPatch
     {
         private const string Controller = "SandBox.Missions.MissionLogics.Arena.ArenaPracticeFightMissionController";
-
-        /// <summary>A fifth of the hero's full health, so five knockdowns empty it.</summary>
-        private const float Share = 0.2f;
 
         private static bool Prepare() => Target() != null;
 
@@ -45,14 +43,14 @@ namespace ProgressionExpanded
             try
             {
                 var settings = Settings.Instance;
-                if (!Mod.On || settings == null || !settings.PracticeInjuries) return;
+                if (!Mod.On || settings == null || settings.PracticeInjury <= 0) return;
 
                 if (affectedAgent == null || !affectedAgent.IsMainAgent) return;
 
                 var hero = Hero.MainHero;
                 if (hero == null) return;
 
-                var lost = Math.Max(1, (int)(hero.MaxHitPoints * Share));
+                var lost = Math.Max(1, hero.MaxHitPoints * settings.PracticeInjury / 100);
                 var left = Math.Max(1, hero.HitPoints - lost);
                 if (left == hero.HitPoints) return;
 
