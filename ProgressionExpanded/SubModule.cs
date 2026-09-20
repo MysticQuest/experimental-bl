@@ -123,6 +123,10 @@ namespace ProgressionExpanded
                 // Always added; the behaviour itself checks the setting and only ever fires on a
                 // new campaign, so there is nothing to gate at load time.
                 campaignStarter.AddBehavior(new DestituteStartBehavior());
+
+                // Same reasoning: it keeps the timestamps the daily drift needs whether or not the
+                // feature is on, so switching it back on mid-campaign does not start from nothing.
+                campaignStarter.AddBehavior(new BodyDriftBehavior());
                 Log.Write("Behaviours registered");
             }
             Log.Write($"Active. 275 lands at level {Curve.MasteryLevel:0.0}, 330 at {settings.Level330}, "
@@ -148,7 +152,13 @@ namespace ProgressionExpanded
             // by ref, which is the shape most likely to be mis-wrapped.
             "VigorHitPointsPatch", "AttributeCardPatch", "CharacterCreationAttributeCardPatch",
             "ControlStaggerPatch", "VigorMomentumPatch", "VigorKnockbackPatch",
-            "ControlFootingPatch"
+            "ControlFootingPatch",
+
+            // The body bonuses that read an agent rather than a hero. The forge one and the daily
+            // drift are campaign-side and stay on when battle patches are switched off.
+            "PhysiqueAgentPatch", "PhysiqueFootingPatch", "PhysiqueStaggerPatch",
+            "PhysiqueDamagePatch", "PhysiqueStrikePatch", "PhysiqueDismountPatch",
+            "PhysiqueEncumbrancePatch"
         };
 
         private static void ApplyPatches(Harmony harmony)
@@ -158,7 +168,7 @@ namespace ProgressionExpanded
             var missions = Mod.Flag("MissionPatches", Settings.Instance?.MissionPatches);
             if (!missions) Log.Write("Battle and mission patches switched off");
 
-            var limit = Mod.Number("PatchLimit", Settings.Instance?.PatchLimit, 40);
+            var limit = Mod.Number("PatchLimit", Settings.Instance?.PatchLimit, 60);
             var names = new List<string>();
 
             var types = typeof(SubModule).Assembly.GetTypes();

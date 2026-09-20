@@ -17,6 +17,7 @@ namespace ProgressionExpanded
         private const string Features = "What the mod does";
         private const string Career = "Your progression";
         private const string Feel = "How it feels";
+        private const string Body = "Your body";
         private const string Rates = "Skill XP rates";
         private const string Skills = "Global skill bonuses";
         private const string Attributes = "Attribute bonuses";
@@ -165,6 +166,19 @@ namespace ProgressionExpanded
             HintText = "Points 1 to 4 cost 1 each, 5 to 8 cost 2 each, 9 and 10 cost 3 each. 18 points for a mastered skill instead of 10.")]
         [SettingPropertyGroup(Feel, GroupOrder = 2)]
         public bool EscalatingFocusCost { get; set; } = true;
+
+        // --- The body. Vanilla already drifts build and weight daily; these widen the band it is
+        // --- held in and let training move it as well. See BodyDrift for the reasoning.
+
+        [SettingPropertyBool("Body dimension patch", Order = 0, RequireRestart = false,
+            HintText = "Your build and weight change as you live, and what they are changes what you can do. Vanilla already thickens you while you fight and thins you on the road; this frees build across the whole range, lets Athletics drive it, and pays each body type its own bonuses.")]
+        [SettingPropertyGroup(Body, GroupOrder = 3)]
+        public bool BodyDrift { get; set; } = false;
+
+
+
+
+
 
         // --- Skill XP rates. 1.0 is the game's own award rate; higher pays more per event. ---
 
@@ -359,10 +373,10 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(Trouble, GroupOrder = 7)]
         public bool MissionPatches { get; set; } = true;
 
-        [SettingPropertyInteger("Patch classes to apply (needs restart)", 0, 40, "0", Order = 4, RequireRestart = true,
-            HintText = "Troubleshooting only. Applies the first N patch classes in alphabetical order and skips the rest; the log names every one it applied. Leave at 40 for normal play. To find a faulty patch, halve it until the fault stops, then read the log for the last name that was still included.")]
+        [SettingPropertyInteger("Patch classes to apply (needs restart)", 0, 60, "0", Order = 4, RequireRestart = true,
+            HintText = "Troubleshooting only. Applies the first N patch classes in alphabetical order and skips the rest; the log names every one it applied. Leave at 60 for normal play. To find a faulty patch, halve it until the fault stops, then read the log for the last name that was still included.")]
         [SettingPropertyGroup(Trouble, GroupOrder = 7)]
-        public int PatchLimit { get; set; } = 40;
+        public int PatchLimit { get; set; } = 60;
 
         // --- Debug ---
 
