@@ -39,7 +39,22 @@ namespace ProgressionExpanded
         [SettingPropertyGroup(Features, GroupOrder = 0)]
         public bool StartWithNothing { get; set; } = true;
 
-        [SettingPropertyButton("Information", Content = "Read", Order = 6,
+        [SettingPropertyBool("Practice fights cost health", Order = 6, RequireRestart = true,
+            HintText = "Going down in the practice ring takes a fifth of your health, and it does not come back when you stand up. Five knockdowns and there is nothing left; long before that the wound threshold puts you out of the ring until you have healed. Without it, paying a real rate for practice makes the ring the obvious way to train everything.")]
+        [SettingPropertyGroup(Features, GroupOrder = 0)]
+        public bool PracticeInjuries { get; set; } = true;
+
+        [SettingPropertyFloatingInteger("Practice fight XP rate", 0f, 1f, "0.00", Order = 7, RequireRestart = false,
+            HintText = "What a hit in the practice ring is worth against the same hit in a real battle. Vanilla pays 0.06, which is a rounding error next to what a skill level costs here.")]
+        [SettingPropertyGroup(Features, GroupOrder = 0)]
+        public float PracticeXpRate { get; set; } = 0.33f;
+
+        [SettingPropertyFloatingInteger("Tournament XP rate", 0f, 1f, "0.00", Order = 8, RequireRestart = false,
+            HintText = "The same, for a tournament. Vanilla pays 0.33.")]
+        [SettingPropertyGroup(Features, GroupOrder = 0)]
+        public float TournamentXpRate { get; set; } = 0.66f;
+
+        [SettingPropertyButton("Information", Content = "Read", Order = 9,
             RequireRestart = false,
             HintText = "What this mod is and how finished it is, plus which settings take hold at once, which need the campaign reloaded, and what may happen to skills you have already earned. Worth a read before changing anything in a campaign you care about.")]
         [SettingPropertyGroup(Features, GroupOrder = 0)]
@@ -151,21 +166,6 @@ namespace ProgressionExpanded
         public bool EscalatingFocusCost { get; set; } = true;
 
         // --- Skill XP rates. 1.0 is the game's own award rate; higher pays more per event. ---
-
-        [SettingPropertyBool("Practice fights cost health", Order = 99, RequireRestart = true,
-            HintText = "Going down in the practice ring takes a fifth of your health, and it does not come back when you stand up. Five knockdowns and there is nothing left; long before that the wound threshold puts you out of the ring until you have healed. Without it, paying a real rate for practice makes the ring the obvious way to train everything.")]
-        [SettingPropertyGroup(Rates, GroupOrder = 3)]
-        public bool PracticeInjuries { get; set; } = true;
-
-        [SettingPropertyFloatingInteger("Practice fights", 0f, 1f, "0.00", Order = 100, RequireRestart = false,
-            HintText = "What a hit in the practice ring is worth against the same hit in a real battle. Vanilla pays 0.06, which is a rounding error next to what a skill level costs here.")]
-        [SettingPropertyGroup(Rates, GroupOrder = 3)]
-        public float PracticeXpRate { get; set; } = 0.33f;
-
-        [SettingPropertyFloatingInteger("Tournaments", 0f, 1f, "0.00", Order = 101, RequireRestart = false,
-            HintText = "The same, for a tournament. Vanilla pays 0.33.")]
-        [SettingPropertyGroup(Rates, GroupOrder = 3)]
-        public float TournamentXpRate { get; set; } = 0.66f;
 
         [SettingPropertyFloatingInteger("One Handed", 1f, 10f, "0.00", Order = 0, RequireRestart = false,
             HintText = "Earns per combat hit.")]
